@@ -43,6 +43,7 @@ Route::get('average-response', [AnalyticController::class, 'averageResponse'])->
 Route::post('recent-incident', [AnalyticController::class, 'latestDoneReport'])->middleware('auth:sanctum');
 Route::post('register-moderator', [AuthController::class, 'registerModerator'])->middleware('auth:sanctum');
 
+Route::get('get-news', [AnalyticController::class, 'getNews']);
 
 // General Controller
 Route::name('api')

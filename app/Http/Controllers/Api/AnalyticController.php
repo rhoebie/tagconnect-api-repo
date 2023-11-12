@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use SimplePie;
 
 class AnalyticController extends Controller
 {
@@ -329,6 +330,34 @@ class AnalyticController extends Controller
         } else {
             return response()->json(['message' => 'User is not a moderator.']);
         }
+    }
+
+    public function getNews()
+    {
+        $feedUrl = 'https://www.manilatimes.net/news/feed/';
+        $maxItems = 5; // You can adjust this to the number of news items you want to retrieve
+
+        $feed = new SimplePie();
+        $feed->set_feed_url($feedUrl);
+        $feed->enable_cache(false); // Disable caching for simplicity
+        $feed->init();
+
+        $news = [];
+
+        foreach ($feed->get_items(0, $maxItems) as $item) {
+            $news[] = [
+                'title' => $item->get_title(),
+                'author' => $item->get_author()->get_name(),
+                // Get the author's name
+                'link' => $item->get_permalink(),
+                'description' => $item->get_description(),
+                'date' => $item->get_date('Y-m-d H:i:s'),
+                'image' => $item->get_enclosure()->get_link(),
+                // Get the URL of the image or thumbnail
+            ];
+        }
+
+        return response()->json($news);
     }
 }
 
