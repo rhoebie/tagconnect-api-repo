@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\NewsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RoleController;
@@ -35,15 +36,7 @@ Route::post('request-otp', [AuthController::class, 'requestOtp']);
 Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::patch('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
-Route::get('all-reports', [AnalyticController::class, 'getReportsByEmergencyType'])->middleware('auth:sanctum')->middleware('auth:sanctum');
-Route::get('user-reports', [AnalyticController::class, 'countUserReport'])->middleware('auth:sanctum');
-Route::post('barangay-reports', [AnalyticController::class, 'getEmergencyTypeCountsByBarangay'])->middleware('auth:sanctum');
-Route::get('moderator-reports', [AnalyticController::class, 'getReportsByAssignedBarangay'])->middleware('auth:sanctum');
-Route::get('average-response', [AnalyticController::class, 'averageResponse'])->middleware('auth:sanctum');
-Route::post('recent-incident', [AnalyticController::class, 'latestDoneReport'])->middleware('auth:sanctum');
-Route::post('register-moderator', [AuthController::class, 'registerModerator'])->middleware('auth:sanctum');
-
-Route::get('get-news', [AnalyticController::class, 'getNews']);
+Route::get('get-news', [NewsController::class, 'getNews']);
 
 // General Controller
 Route::name('api')
