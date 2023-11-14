@@ -4,18 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Report;
 use App\Models\Barangay;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AnalyticController extends Controller
 {
-    function getBarangayAnalytics()
+    function getBarangayAnalytics(Request $request)
     {
         // Retrieve all barangays
         $barangays = Barangay::all();
 
         $result = [];
+
+        // Pagination parameters
+        $perPage = $request->input('per_page', 10);
+        $currentPage = $request->input('page', 1);
 
         // Loop through each barangay
         foreach ($barangays as $barangay) {
@@ -89,6 +95,24 @@ class AnalyticController extends Controller
             ];
         }
 
-        return $result;
+        // Paginate the result array
+        $paginatedResult = collect($result)->slice(($currentPage - 1) * $perPage, $perPage)->all();
+
+        // Create a paginator instance
+        $paginator = new LengthAwarePaginator(
+            $paginatedResult,
+            count($result),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url()]
+        );
+
+        return response()->json([
+            'meta' => [
+                'total_page' => $paginator->lastPage(),
+                'current_page' => $paginator->currentPage(),
+            ],
+            'data' => $paginator->items(),
+        ]);
     }
 }
