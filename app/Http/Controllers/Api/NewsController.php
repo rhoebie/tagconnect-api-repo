@@ -18,7 +18,7 @@ class NewsController extends Controller
         $feed->enable_cache(false);
         $feed->init();
 
-        $perPage = $request->input('per_page', 10);
+        $perPage = 10; // Set a default value for per_page
         $currentPage = $request->input('page', 1);
 
         // Get the total number of items
@@ -43,16 +43,12 @@ class NewsController extends Controller
         // Create a paginator instance
         $paginator = new Paginator($news, $perPage, $currentPage);
 
-        // Add additional information to the paginator response
-        $paginator->appends('per_page', $perPage);
-
         return response()->json([
-            'data' => $paginator->items(),
             'meta' => [
-                'total' => $totalItems,
-                'per_page' => $perPage,
+                'total_page' => ceil($totalItems / $perPage),
                 'current_page' => $currentPage,
             ],
+            'data' => $paginator->items(),
         ]);
     }
 }
