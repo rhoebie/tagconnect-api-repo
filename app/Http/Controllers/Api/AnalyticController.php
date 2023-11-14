@@ -67,6 +67,7 @@ class AnalyticController extends Controller
 
             // Add barangay data and analytics to the result array
             $result[] = [
+                'id' => $barangay->id,
                 'moderator_id' => $barangay->moderator_id,
                 'name' => $barangay->name,
                 'district' => $barangay->district,
