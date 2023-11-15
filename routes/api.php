@@ -38,6 +38,7 @@ Route::patch('change-password', [AuthController::class, 'changePassword'])->midd
 
 Route::get('get-news', [NewsController::class, 'getNews']);
 Route::get('get-barangay', [AnalyticController::class, 'getBarangayAnalytics']);
+Route::post('get-reports', [AnalyticController::class, 'getReportsByBarangayName']);
 
 // General Controller
 Route::name('api')

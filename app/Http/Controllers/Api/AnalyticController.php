@@ -12,8 +12,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class AnalyticController extends Controller
 {
+    public $baseUrl = 'http://localhost:8000';
     function getBarangayAnalytics(Request $request)
     {
+        // Get the $baseUrl
         // Retrieve all barangays
         $barangays = Barangay::all();
 
@@ -68,6 +70,12 @@ class AnalyticController extends Controller
                 $responseTimeFormatted = 'N/A';
             }
 
+            if ($barangay->image != null) {
+                $imageUrl = $this->baseUrl . $barangay->image;
+            } else {
+                $imageUrl = null;
+            }
+
             // Retrieve location data using raw SQL query
             $locationData = DB::select("SELECT X(location) AS latitude, Y(location) AS longitude FROM reports WHERE barangay_id = ?", [$barangay->id]);
 
@@ -83,7 +91,7 @@ class AnalyticController extends Controller
                     'latitude' => (float) $locationData[0]->latitude,
                     'longitude' => (float) $locationData[0]->longitude,
                 ],
-                'image' => $barangay->image,
+                'image' => $imageUrl,
                 'analytics' => [
                     'General' => $analytics['General'],
                     'Medical' => $analytics['Medical'],
@@ -113,6 +121,87 @@ class AnalyticController extends Controller
                 'current_page' => $paginator->currentPage(),
             ],
             'data' => $paginator->items(),
+        ]);
+    }
+
+    function getReportsByBarangayName(Request $request)
+    {
+        // Get the barangayName parameter from the request
+        $barangayName = $request->input('barangayName', 'all');
+
+        // Set the number of items per page
+        $perPage = $request->input('per_page', 10);
+
+        // Check if the input barangay name is 'all'
+        if (strtolower($barangayName) === 'all') {
+            // Retrieve all reports without filtering by barangay
+            $query = Report::where('isDone', 1)
+                ->orderBy('created_at', 'desc');
+        } else {
+            // Find the barangay by name
+            $barangay = Barangay::where('name', $barangayName)->first();
+
+            if (!$barangay) {
+                return response()->json(['error' => 'Barangay not found'], 404);
+            }
+
+            // Retrieve reports for the specified barangay where isDone is equal to 1
+            $query = Report::where('barangay_id', $barangay->id)
+                ->where('isDone', 1)
+                ->orderBy('created_at', 'desc');
+        }
+
+        // Paginate the results
+        $reports = $query->paginate($perPage);
+
+        // Transform the paginated reports data as needed
+        $formattedReports = [];
+
+        foreach ($reports as $report) {
+            // Retrieve location data using raw SQL query
+            $locationData = DB::select("SELECT X(location) AS latitude, Y(location) AS longitude FROM reports WHERE id = ?", [$report->id]);
+
+            // Concatenate $baseUrl with the value of the image column
+            $imageUrl = $this->baseUrl . $report->image;
+
+            // Calculate time difference between updated_at and created_at in seconds
+            $resolveTimeInSeconds = $report->updated_at->diffInSeconds($report->created_at);
+
+            // Format the resolveTime based on seconds
+            if ($resolveTimeInSeconds < 60) {
+                $resolveTimeFormatted = $resolveTimeInSeconds . ' seconds';
+            } elseif ($resolveTimeInSeconds < 3600) {
+                $resolveTimeFormatted = round($resolveTimeInSeconds / 60) . ' minutes';
+            } else {
+                $resolveTimeFormatted = round($resolveTimeInSeconds / 3600) . ' hours';
+            }
+
+            $formattedReports[] = [
+                'id' => $report->id,
+                'barangay_id' => $report->barangay_id,
+                'emergency_type' => $report->emergency_type,
+                'for_whom' => $report->for_whom,
+                'description' => $report->description,
+                'casualties' => $report->casualties,
+                'location' => [
+                    'latitude' => (float) $locationData[0]->latitude,
+                    'longitude' => (float) $locationData[0]->longitude,
+                ],
+                'image' => $imageUrl,
+                'isDone' => $report->isDone,
+                'created_at' => $report->created_at,
+                'updated_at' => $report->updated_at,
+                'resolveTime' => $resolveTimeFormatted,
+            ];
+        }
+
+        // Return the paginated results with metadata
+        return response()->json([
+            'meta' => [
+                'total_page' => $reports->lastPage(),
+                'current_page' => $reports->currentPage(),
+            ],
+            'data' => $formattedReports,
         ]);
     }
 }
