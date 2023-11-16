@@ -103,24 +103,8 @@ class AnalyticController extends Controller
             ];
         }
 
-        // Paginate the result array
-        $paginatedResult = collect($result)->slice(($currentPage - 1) * $perPage, $perPage)->all();
-
-        // Create a paginator instance
-        $paginator = new LengthAwarePaginator(
-            $paginatedResult,
-            count($result),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url()]
-        );
-
         return response()->json([
-            'meta' => [
-                'total_page' => $paginator->lastPage(),
-                'current_page' => $paginator->currentPage(),
-            ],
-            'data' => $paginator->items(),
+            'data' => $result,
         ]);
     }
 
