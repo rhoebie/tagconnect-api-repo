@@ -8,12 +8,56 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class AnalyticController extends Controller
 {
     public $baseUrl = 'http://localhost:8000';
-    function getBarangayAnalytics(Request $request)
+
+    public function getUserReports()
+    {
+        // Check if the user is authenticated
+        if (Auth::check()) {
+            $user = Auth::user();
+            $reports = Report::where('user_id', $user->id)->get();
+            $formattedReports = [];
+            foreach ($reports as $report) {
+                $locationData = DB::select("SELECT X(location) AS latitude, Y(location) AS longitude FROM reports WHERE id = ?", [$report->id])[0];
+                $status = $report->isDone == 1 ? "Done" : "Pending";
+                $status1 = $report->casualties == 1 ? "True" : "False";
+                if ($report->image != null) {
+                    $imageUrl = $this->baseUrl . $report->image;
+                } else {
+                    $imageUrl = null;
+                }
+
+                $formattedReports[] = [
+                    'id' => $report->id,
+                    'user_id' => $report->users->lastname,
+                    'barangay_id' => $report->barangays->name,
+                    'emergency_type' => $report->emergency_type,
+                    'for_whom' => $report->for_whom,
+                    'description' => $report->description,
+                    'casualties' => $status1,
+                    'location' => [
+                        'latitude' => (float) $locationData->latitude,
+                        'longitude' => (float) $locationData->longitude,
+                    ],
+                    'image' => $imageUrl,
+                    'isDone' => $status,
+                    'created_at' => $report->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $report->updated_at->format('Y-m-d H:i:s'),
+                ];
+            }
+            // Return the formatted reports as a JSON response
+            return response()->json($formattedReports);
+        } else {
+            // Handle the case where the user is not authenticated
+            return response()->json(['message' => 'Unauthorized.']);
+        }
+    }
+
+    function getBarangay(Request $request)
     {
         // Get the $baseUrl
         // Retrieve all barangays
@@ -108,7 +152,7 @@ class AnalyticController extends Controller
         ]);
     }
 
-    function getReportsByBarangayName(Request $request)
+    function getReports(Request $request)
     {
         // Get the barangayName parameter from the request
         $barangayName = $request->input('barangayName', 'all');

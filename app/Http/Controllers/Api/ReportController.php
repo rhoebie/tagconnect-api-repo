@@ -31,6 +31,61 @@ class ReportController extends Controller
     /**
      * Store a newly created resource in storage.   
      */
+    // public function store(StoreReportRequest $request)
+    // {
+    //     $this->authorize('create', Report::class);
+    //     $imagePath = null; // Initialize with null
+
+    //     // Extract latitude and longitude from the 'location' array
+    //     $latitude = $request->input('location.latitude');
+    //     $longitude = $request->input('location.longitude');
+
+    //     // Decode the base64 image data if it's not null
+    //     $imageData = $request->input('image');
+    //     if ($imageData !== null) {
+    //         $imagePath = $this->saveBase64Image($imageData);
+
+    //         if (!$imagePath) {
+    //             return response()->json([
+    //                 'message' => 'Failed to save the image',
+    //             ], 500);
+    //         }
+    //     }
+
+    //     // Get the user ID from the authenticated user
+    //     $user_id = Auth::id();
+
+    //     // Retrieve the barangay ID based on the provided name
+    //     $barangayName = $request->input('barangay_id');
+    //     $barangay = Barangay::where('name', $barangayName)->first();
+
+    //     if (!$barangay) {
+    //         return response()->json([
+    //             'message' => 'Barangay not found',
+    //         ], 404);
+    //     }
+
+    //     // Create a new Report instance and populate it with the validated data
+    //     $report = new Report([
+    //         'user_id' => $user_id,
+    //         'barangay_id' => $barangay->id,
+    //         'emergency_type' => $request->input('emergency_type'),
+    //         'for_whom' => $request->input('for_whom'),
+    //         'description' => $request->input('description'),
+    //         'casualties' => $request->input('casualties'),
+    //         'location' => DB::raw("POINT($latitude, $longitude)"),
+    //         'image' => $imagePath,
+    //         'isDone' => false,
+    //     ]);
+
+    //     $report->save();
+
+    //     return response()->json([
+    //         'message' => 'Success',
+    //         'data' => new ReportResource($report),
+    //     ], 201);
+    // }
+
     public function store(StoreReportRequest $request)
     {
         $this->authorize('create', Report::class);
@@ -52,23 +107,43 @@ class ReportController extends Controller
             }
         }
 
-        // Get the user ID from the authenticated user
-        $user_id = Auth::id();
+        // Use Haversine formula to find the closest barangay
+        $closestBarangay = DB::select("
+        SELECT id, 
+            X(location) AS latitude, 
+            Y(location) AS longitude,
+            (
+                6371 * 
+                acos(
+                    cos(radians($latitude)) * 
+                    cos(radians(X(location))) * 
+                    cos(radians(Y(location)) - 
+                    radians($longitude)) + 
+                    sin(radians($latitude)) * 
+                    sin(radians(X(location)))
+                )
+            ) AS distance
+        FROM barangays
+        ORDER BY distance
+        LIMIT 1
+    ");
 
-        // Retrieve the barangay ID based on the provided name
-        $barangayName = $request->input('barangay_id');
-        $barangay = Barangay::where('name', $barangayName)->first();
-
-        if (!$barangay) {
+        if (empty($closestBarangay)) {
             return response()->json([
-                'message' => 'Barangay not found',
+                'message' => 'No barangay found',
             ], 404);
         }
+
+        // Get the closest barangay ID
+        $closestBarangayId = $closestBarangay[0]->id;
+
+        // Get the user ID from the authenticated user
+        $user_id = Auth::id();
 
         // Create a new Report instance and populate it with the validated data
         $report = new Report([
             'user_id' => $user_id,
-            'barangay_id' => $barangay->id,
+            'barangay_id' => $closestBarangayId,
             'emergency_type' => $request->input('emergency_type'),
             'for_whom' => $request->input('for_whom'),
             'description' => $request->input('description'),

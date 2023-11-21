@@ -37,8 +37,9 @@ Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::patch('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
 Route::get('get-news', [NewsController::class, 'getNews']);
-Route::get('get-barangay', [AnalyticController::class, 'getBarangayAnalytics']);
-Route::post('get-reports', [AnalyticController::class, 'getReportsByBarangayName']);
+Route::get('get-barangay', [AnalyticController::class, 'getBarangay']);
+Route::post('get-reports', [AnalyticController::class, 'getReports']);
+Route::get('get-user-reports', [AnalyticController::class, 'getUserReports'])->middleware('auth:sanctum');
 
 // General Controller
 Route::name('api')
