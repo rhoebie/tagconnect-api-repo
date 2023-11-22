@@ -28,64 +28,6 @@ class ReportController extends Controller
         ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.   
-     */
-    // public function store(StoreReportRequest $request)
-    // {
-    //     $this->authorize('create', Report::class);
-    //     $imagePath = null; // Initialize with null
-
-    //     // Extract latitude and longitude from the 'location' array
-    //     $latitude = $request->input('location.latitude');
-    //     $longitude = $request->input('location.longitude');
-
-    //     // Decode the base64 image data if it's not null
-    //     $imageData = $request->input('image');
-    //     if ($imageData !== null) {
-    //         $imagePath = $this->saveBase64Image($imageData);
-
-    //         if (!$imagePath) {
-    //             return response()->json([
-    //                 'message' => 'Failed to save the image',
-    //             ], 500);
-    //         }
-    //     }
-
-    //     // Get the user ID from the authenticated user
-    //     $user_id = Auth::id();
-
-    //     // Retrieve the barangay ID based on the provided name
-    //     $barangayName = $request->input('barangay_id');
-    //     $barangay = Barangay::where('name', $barangayName)->first();
-
-    //     if (!$barangay) {
-    //         return response()->json([
-    //             'message' => 'Barangay not found',
-    //         ], 404);
-    //     }
-
-    //     // Create a new Report instance and populate it with the validated data
-    //     $report = new Report([
-    //         'user_id' => $user_id,
-    //         'barangay_id' => $barangay->id,
-    //         'emergency_type' => $request->input('emergency_type'),
-    //         'for_whom' => $request->input('for_whom'),
-    //         'description' => $request->input('description'),
-    //         'casualties' => $request->input('casualties'),
-    //         'location' => DB::raw("POINT($latitude, $longitude)"),
-    //         'image' => $imagePath,
-    //         'isDone' => false,
-    //     ]);
-
-    //     $report->save();
-
-    //     return response()->json([
-    //         'message' => 'Success',
-    //         'data' => new ReportResource($report),
-    //     ], 201);
-    // }
-
     public function store(StoreReportRequest $request)
     {
         $this->authorize('create', Report::class);
@@ -149,6 +91,7 @@ class ReportController extends Controller
             'description' => $request->input('description'),
             'casualties' => $request->input('casualties'),
             'location' => DB::raw("POINT($latitude, $longitude)"),
+            'visibility' => $request->input('visibility'),
             'image' => $imagePath,
             'isDone' => false,
         ]);
@@ -228,6 +171,7 @@ class ReportController extends Controller
             'for_whom' => $validated['for_whom'],
             'description' => $validated['description'],
             'casualties' => $validated['casualties'],
+            'visibility' => $validated['visibility'],
             'image' => $validated['image'],
             'isDone' => $validated['isDone'],
         ]);

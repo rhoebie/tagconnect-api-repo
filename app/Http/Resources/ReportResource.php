@@ -30,6 +30,7 @@ class ReportResource extends JsonResource
                 'latitude' => (float) $location->latitude,
                 'longitude' => (float) $location->longitude,
             ],
+            'visibility' => $this->visibility,
             'image' => $this->image,
             'isDone' => $this->isDone,
             'created_at' => $this->created_at->format('Y-m-d H:i:s'),

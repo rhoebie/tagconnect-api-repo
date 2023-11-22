@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->mediumText('description');
             $table->boolean('casualties')->default(false);
             $table->point('location');
+            $table->enum('visibility', ['Private', 'Public']);
             $table->binary('image')->nullable();
             $table->boolean('isDone')->default(false);
             $table->timestamps();

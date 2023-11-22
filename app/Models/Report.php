@@ -21,6 +21,7 @@ class Report extends Model
         'description',
         'casualties',
         'location',
+        'visibility',
         'image',
         'isDone',
     ];

@@ -206,8 +206,6 @@ class UserSeeder extends Seeder
             ]
         );
 
-
-
         User::create([
             'role_id' => 1,
             'firstname' => 'Rhoebie Jayriz',
@@ -218,7 +216,25 @@ class UserSeeder extends Seeder
             'contactnumber' => '09565478217',
             'address' => 'Block 121 Lot 11 Phase 8, Sitio Imelda, Upper Bicutan, Taguig City, Metro Manila',
             'email' => 'rhoebie.edu@gmail.com',
-            'password' => Hash::make('Rhoebi3-JL'),
+            'password' => Hash::make('rhoebie123'),
+            'image' => null,
+            'status' => 'Verified',
+            'verification_code' => '00000000',
+            'email_verified_at' => now(),
+            'last_code_request' => now(),
+        ]);
+
+        User::create([
+            'role_id' => 1,
+            'firstname' => 'Jeffry',
+            'middlename' => 'Sibal',
+            'lastname' => 'Manalo',
+            'age' => '21',
+            'birthdate' => '2001-12-10',
+            'contactnumber' => '09384433774',
+            'address' => '398f, MLQ St purok 5,  Bagumbayan, Taguig City, Metro Manila',
+            'email' => 'jeffrysibalmanalo@gmail.com',
+            'password' => Hash::make('Jeffry-123'),
             'image' => null,
             'status' => 'Verified',
             'verification_code' => '00000000',

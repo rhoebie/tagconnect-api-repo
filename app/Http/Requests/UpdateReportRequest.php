@@ -35,6 +35,7 @@ class UpdateReportRequest extends FormRequest
                 'location' => ['required', 'array'],
                 'location.latitude' => ['required', 'numeric'],
                 'location.longitude' => ['required', 'numeric'],
+                'visibility' => ['required', 'in:Private,Public'],
                 'image' => ['nullable', new ValidImage],
                 'isDone' => ['required', 'boolean'],
             ];
@@ -50,6 +51,7 @@ class UpdateReportRequest extends FormRequest
                 'location' => ['sometimes', 'array'],
                 'location.latitude' => ['sometimes', 'numeric'],
                 'location.longitude' => ['sometimes', 'numeric'],
+                'visibility' => ['required', 'in:Private,Public'],
                 'image' => ['nullable', new ValidImage],
                 'isDone' => ['sometimes', 'boolean'],
             ];
