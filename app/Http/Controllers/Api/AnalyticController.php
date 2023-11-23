@@ -43,6 +43,7 @@ class AnalyticController extends Controller
                         'latitude' => (float) $locationData->latitude,
                         'longitude' => (float) $locationData->longitude,
                     ],
+                    'visibility' => $report->visibility,
                     'image' => $imageUrl,
                     'isDone' => $status,
                     'created_at' => $report->created_at->format('Y-m-d H:i:s'),
@@ -207,6 +208,7 @@ class AnalyticController extends Controller
 
             $formattedReports[] = [
                 'id' => $report->id,
+                'user_id' => $report->user_id,
                 'barangay_id' => $report->barangay_id,
                 'emergency_type' => $report->emergency_type,
                 'for_whom' => $report->for_whom,
@@ -218,8 +220,8 @@ class AnalyticController extends Controller
                 ],
                 'image' => $imageUrl,
                 'isDone' => $report->isDone,
-                'created_at' => $report->created_at,
-                'updated_at' => $report->updated_at,
+                'created_at' => $report->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $report->updated_at->format('Y-m-d H:i:s'),
                 'resolveTime' => $resolveTimeFormatted,
             ];
         }
