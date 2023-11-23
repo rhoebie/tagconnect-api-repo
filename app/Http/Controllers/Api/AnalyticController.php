@@ -164,6 +164,7 @@ class AnalyticController extends Controller
         if (strtolower($barangayName) === 'all') {
             // Retrieve all reports without filtering by barangay
             $query = Report::where('isDone', 1)
+                ->where('visibility', 'Public')
                 ->orderBy('created_at', 'desc');
         } else {
             // Find the barangay by name
