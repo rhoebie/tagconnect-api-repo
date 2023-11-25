@@ -105,8 +105,8 @@ class BarangaySeeder extends Seeder
                 'district' => 1,
                 'contact' => '2839 1857',
                 'address' => '#1 C6 road, Purok 5, Lower Bicutan, Taguig, Philippines, 1632',
-                'latitude' => 14.501729318926056,
-                'longitude' => 121.06445251085181,
+                'latitude' => 14.488991470581304,
+                'longitude' => 121.06232548068967,
                 'image' => 'LOWER_BICUTAN.jpg'
             ],
             'North Daang Hari' => [
