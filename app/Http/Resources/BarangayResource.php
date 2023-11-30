@@ -28,7 +28,7 @@ class BarangayResource extends JsonResource
                 'latitude' => (float) $location->latitude,
                 'longitude' => (float) $location->longitude,
             ],
-            'image' => $this->image
+            'image' => getImageUrl($this->image)
         ];
     }
 }

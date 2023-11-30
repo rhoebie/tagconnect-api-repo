@@ -7,7 +7,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
-    public $baseUrl = 'http://localhost:8000';
     /**
      * Transform the resource into an array.
      *
@@ -15,7 +14,7 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $imageUrl = $this->baseUrl . $this->image;
+
         return [
             'id' => $this->id,
             'role_id' => $this->roles->name,
@@ -27,8 +26,10 @@ class UserResource extends JsonResource
             'contactnumber' => $this->contactnumber,
             'address' => $this->address,
             'email' => $this->email,
-            'image' => $imageUrl,
-            'status' => $this->status
+            'image' => getImageUrl($this->image),
+            'status' => $this->status,
+            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 }

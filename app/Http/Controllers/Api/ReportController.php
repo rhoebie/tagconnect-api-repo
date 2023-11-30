@@ -73,7 +73,7 @@ class ReportController extends Controller
             'location' => DB::raw("POINT($latitude, $longitude)"),
             'visibility' => $request->input('visibility'),
             'image' => $imagePath,
-            'isDone' => false,
+            'status' => 'Submitted',
         ]);
 
         $report->save();
@@ -206,19 +206,4 @@ class ReportController extends Controller
 
         return $imageURL;
     }
-
-    // {
-    //     "user_id": 1,
-    //     "barangay_id": 2,
-    //     "type_id": 3,
-    //     "details": "Incident details",
-    //     "contact": "123-456-7890",
-    //     "location": {
-    //         "latitude": 123.456789,
-    //         "longitude": -45.678901
-    //     },
-    //     "image": null,
-    //     "isDone": true
-    // }
-
 }

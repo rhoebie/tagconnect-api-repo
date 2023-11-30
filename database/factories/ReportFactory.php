@@ -39,8 +39,12 @@ class ReportFactory extends Factory
 
         $barangay = DB::table('barangays')->inRandomOrder()->select('id', 'name')->first();
 
-        $createdAt = $this->faker->dateTimeBetween('-30 minutes', '-15 minutes');
-        $updatedAt = $this->faker->dateTimeBetween($createdAt, 'now');
+        $createdAt = $this->faker->dateTimeThisMonth;
+        $intervalMinutes = $this->faker->numberBetween(15, 20);
+
+        // Use clone to create a copy of the DateTime object
+        $updatedAt = clone $createdAt;
+        $updatedAt->add(new \DateInterval('PT' . $intervalMinutes . 'M'));
         return [
             'user_id' => DB::table('users')->inRandomOrder()->value('id'),
             'barangay_id' => $barangay->id,
@@ -51,7 +55,7 @@ class ReportFactory extends Factory
             'location' => $this->randomPoint(),
             'visibility' => $this->faker->randomElement(['Private', 'Public']),
             'image' => $imageURL,
-            'isDOne' => $this->faker->randomElement(['0', '1']),
+            'status' => $this->faker->randomElement(['Submitted', 'Processing', 'Resolved']),
             'created_at' => $createdAt,
             'updated_at' => $updatedAt,
         ];

@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->point('location');
             $table->enum('visibility', ['Private', 'Public']);
             $table->binary('image')->nullable();
-            $table->boolean('isDone')->default(false);
+            $table->enum('status', ['Submitted', 'Processing', 'Resolved']);
             $table->timestamps();
         });
 

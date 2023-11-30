@@ -23,7 +23,7 @@ class Report extends Model
         'location',
         'visibility',
         'image',
-        'isDone',
+        'status',
     ];
 
 

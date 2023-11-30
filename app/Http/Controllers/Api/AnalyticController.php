@@ -2,237 +2,235 @@
 
 namespace App\Http\Controllers\Api;
 
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Report;
 use App\Models\Barangay;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\ReportResource;
+use App\Http\Resources\BarangayResource;
 
 class AnalyticController extends Controller
 {
-    public $baseUrl = 'http://localhost:8000';
 
+    // users analytics
     public function getUserReports()
     {
         // Check if the user is authenticated
         if (Auth::check()) {
             $user = Auth::user();
-            $reports = Report::where('user_id', $user->id)->get();
-            $formattedReports = [];
-            foreach ($reports as $report) {
-                $locationData = DB::select("SELECT X(location) AS latitude, Y(location) AS longitude FROM reports WHERE id = ?", [$report->id])[0];
-                $status = $report->isDone == 1 ? "Done" : "Pending";
-                $status1 = $report->casualties == 1 ? "True" : "False";
-                if ($report->image != null) {
-                    $imageUrl = $this->baseUrl . $report->image;
-                } else {
-                    $imageUrl = null;
-                }
+            $reports = Report::where('user_id', $user->id)->paginate(10);
 
-                $formattedReports[] = [
-                    'id' => $report->id,
-                    'user_id' => $report->users->lastname,
-                    'barangay_id' => $report->barangays->name,
-                    'emergency_type' => $report->emergency_type,
-                    'for_whom' => $report->for_whom,
-                    'description' => $report->description,
-                    'casualties' => $status1,
-                    'location' => [
-                        'latitude' => (float) $locationData->latitude,
-                        'longitude' => (float) $locationData->longitude,
-                    ],
-                    'visibility' => $report->visibility,
-                    'image' => $imageUrl,
-                    'isDone' => $status,
-                    'created_at' => $report->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $report->updated_at->format('Y-m-d H:i:s'),
-                ];
-            }
-            // Return the formatted reports as a JSON response
-            return response()->json($formattedReports);
+            $reportDetails = ReportResource::collection($reports);
+
+            $meta = [
+                'current_page' => $reports->currentPage(),
+                'total_pages' => $reports->lastPage(),
+            ];
+
+            return response()->json([
+                'data' => $reportDetails,
+                'meta' => $meta,
+            ], 200);
         } else {
-            // Handle the case where the user is not authenticated
             return response()->json(['message' => 'Unauthorized.']);
         }
     }
 
-    function getBarangay(Request $request)
+    public function getAllBarangay()
     {
-        // Get the $baseUrl
-        // Retrieve all barangays
-        $barangays = Barangay::all();
+        // Check if the user is valid using the Bearer token
+        $user = Auth::user();
 
-        $result = [];
-
-        // Pagination parameters
-        $perPage = $request->input('per_page', 10);
-        $currentPage = $request->input('page', 1);
-
-        // Loop through each barangay
-        foreach ($barangays as $barangay) {
-            $analytics = [
-                'General' => 0,
-                'Medical' => 0,
-                'Fire' => 0,
-                'Crime' => 0,
-                'ResponseTime' => 0,
-                'TotalReports' => 0,
-            ];
-
-            // Retrieve reports for the current barangay
-            $reports = Report::where('barangay_id', $barangay->id)->get();
-
-            // Loop through each report
-            foreach ($reports as $report) {
-                // Count emergency types
-                $analytics[$report->emergency_type]++;
-
-                // Calculate ResponseTime
-                $createdAt = Carbon::parse($report->created_at);
-                $updatedAt = Carbon::parse($report->updated_at);
-                $responseTime = $updatedAt->diffInSeconds($createdAt);
-                $analytics['ResponseTime'] += $responseTime;
-
-                // Count total reports
-                $analytics['TotalReports']++;
-            }
-
-            // Calculate average ResponseTime
-            if ($analytics['TotalReports'] > 0) {
-                $responseTimeInSeconds = $analytics['ResponseTime'] / $analytics['TotalReports'];
-
-                // Format ResponseTime
-                if ($responseTimeInSeconds < 60) {
-                    $responseTimeFormatted = $responseTimeInSeconds . ' seconds';
-                } elseif ($responseTimeInSeconds < 3600) {
-                    $responseTimeFormatted = round($responseTimeInSeconds / 60, 2) . ' minutes';
-                } else {
-                    $responseTimeFormatted = round($responseTimeInSeconds / 3600, 2) . ' hours';
-                }
-            } else {
-                $responseTimeFormatted = 'N/A';
-            }
-
-            if ($barangay->image != null) {
-                $imageUrl = $this->baseUrl . $barangay->image;
-            } else {
-                $imageUrl = null;
-            }
-
-            // Retrieve location data using raw SQL query
-            $locationData = DB::select("SELECT X(location) AS latitude, Y(location) AS longitude FROM reports WHERE barangay_id = ?", [$barangay->id]);
-
-            // Add barangay data and analytics to the result array
-            $result[] = [
-                'id' => $barangay->id,
-                'moderator_id' => $barangay->moderator_id,
-                'name' => $barangay->name,
-                'district' => $barangay->district,
-                'contact' => $barangay->contact,
-                'address' => $barangay->address,
-                'location' => [
-                    'latitude' => (float) $locationData[0]->latitude,
-                    'longitude' => (float) $locationData[0]->longitude,
-                ],
-                'image' => $imageUrl,
-                'analytics' => [
-                    'General' => $analytics['General'],
-                    'Medical' => $analytics['Medical'],
-                    'Fire' => $analytics['Fire'],
-                    'Crime' => $analytics['Crime'],
-                    'ResponseTime' => $responseTimeFormatted,
-                    'TotalReports' => $analytics['TotalReports'],
-                ],
-            ];
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Paginate the barangays
+        $barangays = Barangay::paginate(10);
+
+        // Format the data using BarangayResource
+        $formattedBarangays = BarangayResource::collection($barangays);
+
+        // Build the meta information
+        $meta = [
+            'current_page' => $barangays->currentPage(),
+            'total_pages' => $barangays->lastPage(),
+        ];
+
         return response()->json([
-            'data' => $result,
-        ]);
+            'data' => $formattedBarangays,
+            'meta' => $meta,
+        ], 200);
     }
 
-    function getReports(Request $request)
+    function getfeedReports(Request $request)
     {
-        // Get the barangayName parameter from the request
+        // Check if the user is valid using the Bearer token
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $barangayName = $request->input('barangayName', 'all');
 
-        // Set the number of items per page
-        $perPage = $request->input('per_page', 10);
-
-        // Check if the input barangay name is 'all'
         if (strtolower($barangayName) === 'all') {
-            // Retrieve all reports without filtering by barangay
-            $query = Report::where('isDone', 1)
+            $reports = Report::where('status', 'Resolved')
                 ->where('visibility', 'Public')
-                ->orderBy('created_at', 'desc');
+                ->orderBy('created_at', 'desc')->paginate(10);
         } else {
-            // Find the barangay by name
             $barangay = Barangay::where('name', $barangayName)->first();
 
             if (!$barangay) {
                 return response()->json(['error' => 'Barangay not found'], 404);
             }
-
-            // Retrieve reports for the specified barangay where isDone is equal to 1
-            $query = Report::where('barangay_id', $barangay->id)
-                ->where('isDone', 1)
-                ->orderBy('created_at', 'desc');
+            $reports = Report::where('barangay_id', $barangay->id)
+                ->where('status', 'Resolved')
+                ->where('visibility', 'Public')
+                ->orderBy('created_at', 'desc')->paginate(10);
+            ;
         }
 
-        // Paginate the results
-        $reports = $query->paginate($perPage);
+        $reportDetails = ReportResource::collection($reports);
 
-        // Transform the paginated reports data as needed
-        $formattedReports = [];
+        $meta = [
+            'current_page' => $reports->currentPage(),
+            'total_pages' => $reports->lastPage(),
+        ];
 
-        foreach ($reports as $report) {
-            // Retrieve location data using raw SQL query
-            $locationData = DB::select("SELECT X(location) AS latitude, Y(location) AS longitude FROM reports WHERE id = ?", [$report->id]);
-
-            // Concatenate $baseUrl with the value of the image column
-            $imageUrl = $this->baseUrl . $report->image;
-
-            // Calculate time difference between updated_at and created_at in seconds
-            $resolveTimeInSeconds = $report->updated_at->diffInSeconds($report->created_at);
-
-            // Format the resolveTime based on seconds
-            if ($resolveTimeInSeconds < 60) {
-                $resolveTimeFormatted = $resolveTimeInSeconds . ' seconds';
-            } elseif ($resolveTimeInSeconds < 3600) {
-                $resolveTimeFormatted = round($resolveTimeInSeconds / 60) . ' minutes';
-            } else {
-                $resolveTimeFormatted = round($resolveTimeInSeconds / 3600) . ' hours';
-            }
-
-            $formattedReports[] = [
-                'id' => $report->id,
-                'user_id' => $report->user_id,
-                'barangay_id' => $report->barangay_id,
-                'emergency_type' => $report->emergency_type,
-                'for_whom' => $report->for_whom,
-                'description' => $report->description,
-                'casualties' => $report->casualties,
-                'location' => [
-                    'latitude' => (float) $locationData[0]->latitude,
-                    'longitude' => (float) $locationData[0]->longitude,
-                ],
-                'image' => $imageUrl,
-                'isDone' => $report->isDone,
-                'created_at' => $report->created_at->format('Y-m-d H:i:s'),
-                'updated_at' => $report->updated_at->format('Y-m-d H:i:s'),
-                'resolveTime' => $resolveTimeFormatted,
-            ];
-        }
-
-        // Return the paginated results with metadata
         return response()->json([
-            'meta' => [
-                'total_page' => $reports->lastPage(),
-                'current_page' => $reports->currentPage(),
-            ],
-            'data' => $formattedReports,
-        ]);
+            'data' => $reportDetails,
+            'meta' => $meta,
+        ], 200);
     }
+
+    public function getBarangayUsers()
+    {
+        // Step 1: Get the authenticated user's role and assigned barangay
+        $user = Auth::user();
+
+        if ($user->isModerator()) {
+            $barangayId = $user->barangays->id;
+        } else {
+            // Return an error response since the user is not a moderator
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Step 2: Get all reports assigned to the barangay
+        $reports = Report::where('barangay_id', $barangayId)->get();
+
+        // Step 3: Get user information based on the user_id in each report
+        $userIds = $reports->pluck('user_id')->unique();
+        $users = User::whereIn('id', $userIds)->paginate(10);
+
+        $userDetails = UserResource::collection($users);
+
+        $meta = [
+            'current_page' => $users->currentPage(),
+            'total_pages' => $users->lastPage(),
+        ];
+
+        return response()->json([
+            'data' => $userDetails,
+            'meta' => $meta,
+        ], 200);
+    }
+
+    public function countEmergencyTypes(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->isModerator()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $barangayName = $request->input('barangay_name');
+        $reports = Report::whereHas('barangays', function ($query) use ($barangayName) {
+            $query->where('name', $barangayName);
+        })->get();
+
+        $emergencyTypeCounts = $reports->groupBy('emergency_type')->map->count();
+
+        return response()->json($emergencyTypeCounts, 200);
+    }
+
+    public function weeklyReport(Request $request)
+    {
+        // Step 1: Check if the user is a moderator
+        $user = Auth::user();
+        if (!$user->isModerator()) {
+            // Return an error response since the user is not a moderator
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Step 2: Determine the start and end dates
+        $inputDate = $request->input('date');
+        $startDate = $this->getMondayDate($inputDate);
+
+        // Calculate the end date as the next Sunday
+        $endDate = $startDate->copy()->endOfWeek();
+
+        // Adjust the end date if it's in the past
+        $endDate = $endDate->isPast() ? $endDate : Carbon::today();
+
+        // Step 3: Get the total count of reports for each day
+        $reportCounts = [];
+        $currentDate = $startDate->copy();
+
+        while ($currentDate <= $endDate) {
+            $dayOfWeek = $currentDate->dayName;
+            $reportCount = Report::whereDate('created_at', '>=', $currentDate->startOfDay())
+                ->whereDate('created_at', '<=', $currentDate->endOfDay())
+                ->count();
+            $reportCounts[$dayOfWeek] = $reportCount;
+
+            // Move to the next day
+            $currentDate->addDay();
+        }
+
+
+        // Step 4: Return the result
+        return response()->json([
+            'Start' => $startDate->toDateString(),
+            'End' => $endDate->toDateString(),
+            'ReportCounts' => $reportCounts,
+        ], 200);
+    }
+
+    private function getMondayDate($inputDate)
+    {
+        $date = $inputDate ? Carbon::parse($inputDate) : Carbon::today();
+        return $date->startOfWeek(); // This will get the start of the week (Monday)
+    }
+
+    public function countReportsForDate(Request $request)
+    {
+        // Step 1: Check if the user is a moderator
+        $user = Auth::user();
+        if (!$user->isModerator()) {
+            // Return an error response since the user is not a moderator
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Step 2: Get the input date from the request
+        $inputDate = $request->input('date');
+
+        // Step 3: Validate the input date (you may want to add further validation)
+        if (!Carbon::hasFormat($inputDate, 'Y-m-d')) {
+            return response()->json(['error' => 'Invalid date format'], 400);
+        }
+
+        // Step 4: Count the total reports for the input date
+        $reportCount = Report::whereDate('created_at', Carbon::parse($inputDate)->toDateString())->count();
+
+        // Step 5: Return the result
+        return response()->json([
+            'Date' => $inputDate,
+            'ReportCount' => $reportCount,
+        ], 200);
+    }
+
 }

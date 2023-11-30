@@ -37,9 +37,14 @@ Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::patch('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
 Route::get('get-news', [NewsController::class, 'getNews']);
-Route::get('get-barangay', [AnalyticController::class, 'getBarangay']);
-Route::post('get-reports', [AnalyticController::class, 'getReports']);
+Route::get('get-barangay', [AnalyticController::class, 'getAllBarangay'])->middleware('auth:sanctum');
+Route::post('get-feed-reports', [AnalyticController::class, 'getfeedReports'])->middleware('auth:sanctum');
 Route::get('get-user-reports', [AnalyticController::class, 'getUserReports'])->middleware('auth:sanctum');
+
+Route::get('moderator-get-users', [AnalyticController::class, 'getBarangayUsers'])->middleware('auth:sanctum');
+Route::post('countby-emergencyTypes', [AnalyticController::class, 'countEmergencyTypes'])->middleware('auth:sanctum');
+Route::post('count-weekly-report', [AnalyticController::class, 'weeklyReport'])->middleware('auth:sanctum');
+Route::post('count-day-report', [AnalyticController::class, 'countReportsForDate'])->middleware('auth:sanctum');
 
 // General Controller
 Route::name('api')

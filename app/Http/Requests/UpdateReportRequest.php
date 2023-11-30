@@ -28,7 +28,7 @@ class UpdateReportRequest extends FormRequest
                 'user_id' => ['required', 'exists:users,id'],
                 'barangay_id' => ['required', 'exists:barangays,id'],
                 'emergency_type' => ['required', 'in:General,Medical,Fire,Crime'],
-            'for_whom' => ['required', 'in:Myself,Another_Person'],
+                'for_whom' => ['required', 'in:Myself,Another_Person'],
                 'description' => ['required', 'string'],
                 'casualties' => ['required', 'boolean'],
                 'location' => ['required', 'array'],
@@ -36,7 +36,7 @@ class UpdateReportRequest extends FormRequest
                 'location.longitude' => ['required', 'numeric'],
                 'visibility' => ['required', 'in:Private,Public'],
                 'image' => ['nullable', new ValidImage],
-                'isDone' => ['required', 'boolean'],
+                'status' => ['required', 'in:Submitted,Processing,Resolved'],
             ];
         } else {
             return [
@@ -51,7 +51,7 @@ class UpdateReportRequest extends FormRequest
                 'location.longitude' => ['sometimes', 'numeric'],
                 'visibility' => ['sometimes', 'in:Private,Public'],
                 'image' => ['nullable', new ValidImage],
-                'isDone' => ['sometimes', 'boolean'],
+                'status' => ['sometimes', 'in:Submitted,Processing,Resolved'],
             ];
         }
     }
