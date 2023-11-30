@@ -49,43 +49,23 @@ class ReportController extends Controller
             }
         }
 
-        // Use Haversine formula to find the closest barangay
-        $closestBarangay = DB::select("
-        SELECT id, 
-            X(location) AS latitude, 
-            Y(location) AS longitude,
-            (
-                6371 * 
-                acos(
-                    cos(radians($latitude)) * 
-                    cos(radians(X(location))) * 
-                    cos(radians(Y(location)) - 
-                    radians($longitude)) + 
-                    sin(radians($latitude)) * 
-                    sin(radians(X(location)))
-                )
-            ) AS distance
-        FROM barangays
-        ORDER BY distance
-        LIMIT 1
-    ");
-
-        if (empty($closestBarangay)) {
-            return response()->json([
-                'message' => 'No barangay found',
-            ], 404);
-        }
-
-        // Get the closest barangay ID
-        $closestBarangayId = $closestBarangay[0]->id;
-
         // Get the user ID from the authenticated user
         $user_id = Auth::id();
+
+        // Retrieve the barangay ID based on the provided name
+        $barangayName = $request->input('barangay_id');
+        $barangay = Barangay::where('name', $barangayName)->first();
+
+        if (!$barangay) {
+            return response()->json([
+                'message' => 'Barangay not found',
+            ], 404);
+        }
 
         // Create a new Report instance and populate it with the validated data
         $report = new Report([
             'user_id' => $user_id,
-            'barangay_id' => $closestBarangayId,
+            'barangay_id' => $barangay->id,
             'emergency_type' => $request->input('emergency_type'),
             'for_whom' => $request->input('for_whom'),
             'description' => $request->input('description'),
@@ -130,6 +110,7 @@ class ReportController extends Controller
     public function update(UpdateReportRequest $request, Report $report)
     {
         $this->authorize('update', $report);
+
         if (!$report) {
             return response()->json([
                 'message' => 'Report not found',
@@ -138,10 +119,6 @@ class ReportController extends Controller
 
         $validated = $request->validated();
         $imagePath = null; // Initialize with null
-
-        // Extract latitude and longitude from the 'location' object
-        $latitude = $validated['location']['latitude'];
-        $longitude = $validated['location']['longitude'];
 
         // Decode the base64 image data
         if ($request->has('image')) {
@@ -159,22 +136,8 @@ class ReportController extends Controller
             }
         }
 
-        // Construct the POINT data type with latitude first
-        $pointData = DB::raw("POINT($latitude, $longitude)");
-
         // Update the location attribute and other attributes
-        $report->update([
-            'location' => $pointData,
-            'user_id' => $validated['user_id'],
-            'barangay_id' => $validated['barangay_id'],
-            'emergency_type' => $validated['emergency_type'],
-            'for_whom' => $validated['for_whom'],
-            'description' => $validated['description'],
-            'casualties' => $validated['casualties'],
-            'visibility' => $validated['visibility'],
-            'image' => $validated['image'],
-            'isDone' => $validated['isDone'],
-        ]);
+        $report->update($validated);
 
         return response()->json([
             'message' => 'Success',

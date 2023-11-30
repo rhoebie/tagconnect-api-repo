@@ -43,6 +43,7 @@ class AnalyticController extends Controller
                         'latitude' => (float) $locationData->latitude,
                         'longitude' => (float) $locationData->longitude,
                     ],
+                    'visibility' => $report->visibility,
                     'image' => $imageUrl,
                     'isDone' => $status,
                     'created_at' => $report->created_at->format('Y-m-d H:i:s'),
@@ -164,6 +165,7 @@ class AnalyticController extends Controller
         if (strtolower($barangayName) === 'all') {
             // Retrieve all reports without filtering by barangay
             $query = Report::where('isDone', 1)
+                ->where('visibility', 'Public')
                 ->orderBy('created_at', 'desc');
         } else {
             // Find the barangay by name
@@ -217,8 +219,8 @@ class AnalyticController extends Controller
                 ],
                 'image' => $imageUrl,
                 'isDone' => $report->isDone,
-                'created_at' => $report->created_at,
-                'updated_at' => $report->updated_at,
+                'created_at' => $report->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $report->updated_at->format('Y-m-d H:i:s'),
                 'resolveTime' => $resolveTimeFormatted,
             ];
         }

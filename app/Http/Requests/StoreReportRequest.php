@@ -23,10 +23,11 @@ class StoreReportRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'barangay_id' => ['required', 'exists:barangays,name', 'string'],
             'emergency_type' => ['required', 'in:General,Medical,Fire,Crime'],
             'for_whom' => ['required', 'in:Myself,Another_Person'],
-            'description' => ['required', 'string'],
-            'casualties' => ['required', 'boolean'],
+            'description' => ['nullable', 'string'],
+            'casualties' => ['nullable', 'boolean'],
             'location' => ['required', 'array'],
             'location.latitude' => ['required', 'numeric'],
             'location.longitude' => ['required', 'numeric'],
