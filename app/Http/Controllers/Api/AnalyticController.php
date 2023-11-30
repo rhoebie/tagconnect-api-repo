@@ -208,6 +208,7 @@ class AnalyticController extends Controller
 
             $formattedReports[] = [
                 'id' => $report->id,
+                'user_id' => $report->user_id,
                 'barangay_id' => $report->barangay_id,
                 'emergency_type' => $report->emergency_type,
                 'for_whom' => $report->for_whom,
