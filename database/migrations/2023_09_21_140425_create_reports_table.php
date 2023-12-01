@@ -16,8 +16,8 @@ return new class extends Migration {
             $table->unsignedBigInteger('barangay_id');
             $table->enum('emergency_type', ['General', 'Medical', 'Fire', 'Crime']);
             $table->enum('for_whom', ['Myself', 'Another_Person']);
-            $table->mediumText('description');
-            $table->boolean('casualties')->default(false);
+            $table->mediumText('description')->nullable();
+            $table->boolean('casualties')->nullable();
             $table->point('location');
             $table->enum('visibility', ['Private', 'Public']);
             $table->binary('image')->nullable();

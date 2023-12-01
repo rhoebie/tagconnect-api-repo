@@ -6,11 +6,19 @@ use SimplePie;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Auth;
 
 class NewsController extends Controller
 {
     public function getNews(Request $request)
     {
+        // Check if the user is valid using the Bearer token
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $feedUrl = 'https://www.manilatimes.net/news/feed/';
 
         $feed = new SimplePie();
@@ -44,11 +52,11 @@ class NewsController extends Controller
         $paginator = new Paginator($news, $perPage, $currentPage);
 
         return response()->json([
-            'meta' => [
-                'total_page' => ceil($totalItems / $perPage),
-                'current_page' => $currentPage,
-            ],
             'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $currentPage,
+                'total_pages' => ceil($totalItems / $perPage),
+            ],
         ]);
     }
 }

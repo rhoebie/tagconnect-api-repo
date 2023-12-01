@@ -22,18 +22,12 @@ class AnalyticController extends Controller
         // Check if the user is authenticated
         if (Auth::check()) {
             $user = Auth::user();
-            $reports = Report::where('user_id', $user->id)->paginate(10);
+            $reports = Report::where('user_id', $user->id)->get();
 
             $reportDetails = ReportResource::collection($reports);
 
-            $meta = [
-                'current_page' => $reports->currentPage(),
-                'total_pages' => $reports->lastPage(),
-            ];
-
             return response()->json([
                 'data' => $reportDetails,
-                'meta' => $meta,
             ], 200);
         } else {
             return response()->json(['message' => 'Unauthorized.']);
@@ -49,23 +43,17 @@ class AnalyticController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Paginate the barangays
-        $barangays = Barangay::paginate(10);
+        // Retrieve all barangays
+        $barangays = Barangay::all();
 
         // Format the data using BarangayResource
         $formattedBarangays = BarangayResource::collection($barangays);
 
-        // Build the meta information
-        $meta = [
-            'current_page' => $barangays->currentPage(),
-            'total_pages' => $barangays->lastPage(),
-        ];
-
         return response()->json([
             'data' => $formattedBarangays,
-            'meta' => $meta,
         ], 200);
     }
+
 
     function getfeedReports(Request $request)
     {
