@@ -154,7 +154,7 @@ class AnalyticController extends Controller
 
         $emergencyTypeCounts = $reports->groupBy('emergency_type')->map->count();
 
-        return response()->json($emergencyTypeCounts, 200);
+        return response()->json(['data' => $emergencyTypeCounts], 200);
     }
 
     public function weeklyReport(Request $request)
@@ -191,19 +191,22 @@ class AnalyticController extends Controller
             $currentDate->addDay();
         }
 
+        $data = [
+            'start' => $startDate->toDateString(),
+            'end' => $endDate->toDateString(),
+            'reportcount' => $reportCounts,
+        ];
 
         // Step 4: Return the result
         return response()->json([
-            'Start' => $startDate->toDateString(),
-            'End' => $endDate->toDateString(),
-            'ReportCounts' => $reportCounts,
+            'data' => $data
         ], 200);
     }
 
     private function getMondayDate($inputDate)
     {
         $date = $inputDate ? Carbon::parse($inputDate) : Carbon::today();
-        return $date->startOfWeek(); // This will get the start of the week (Monday)
+        return $date->startOfWeek();
     }
 
     public function countReportsForDate(Request $request)
