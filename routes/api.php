@@ -44,7 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('moderator-get-users', [AnalyticController::class, 'getBarangayUsers']);
     Route::post('count-report-types', [AnalyticController::class, 'countEmergencyTypes']);
-    Route::post('count-weekly-report', [AnalyticController::class, 'weeklyReport']);
+    Route::post('count-weekly-report', [AnalyticController::class, 'moderatorweeklyReport']);
     Route::post('count-day-report', [AnalyticController::class, 'countReportsForDate']);
 });
 
