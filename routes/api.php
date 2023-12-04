@@ -28,13 +28,13 @@ use App\Http\Controllers\Api\BarangayController;
 // routes/api.php or routes/web.php (depending on your needs)
 
 // Authentication Controller
-Route::post('register-user', [AuthController::class, 'registerUser']);
-Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
-Route::post('login-user', [AuthController::class, 'login']);
-Route::post('logout-user', [AuthController::class, 'logout']);
-Route::post('request-otp', [AuthController::class, 'requestOtp']);
-Route::post('reset-password', [AuthController::class, 'resetPassword']);
-Route::patch('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
+Route::post('auth-register-user', [AuthController::class, 'registerUser']);
+Route::post('auth-verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('auth-login-user', [AuthController::class, 'login']);
+Route::post('auth-logout-user', [AuthController::class, 'logout']);
+Route::post('auth-request-otp', [AuthController::class, 'requestOtp']);
+Route::post('auth-reset-password', [AuthController::class, 'resetPassword']);
+Route::patch('auth-change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('user-news', [NewsController::class, 'getNews']);

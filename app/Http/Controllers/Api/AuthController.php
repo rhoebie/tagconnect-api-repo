@@ -83,8 +83,6 @@ class AuthController extends Controller
         }
     }
 
-
-
     public function registerModerator(Request $request)
     {
         try {
