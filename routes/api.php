@@ -37,15 +37,18 @@ Route::post('reset-password', [AuthController::class, 'resetPassword']);
 Route::patch('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('get-news', [NewsController::class, 'getNews']);
-    Route::get('get-barangay', [AnalyticController::class, 'getAllBarangay']);
-    Route::post('get-feed-reports', [AnalyticController::class, 'getfeedReports']);
-    Route::get('get-user-reports', [AnalyticController::class, 'getUserReports']);
+    Route::get('user-news', [NewsController::class, 'getNews']);
+    Route::get('user-barangay', [AnalyticController::class, 'getAllBarangay']);
+    Route::post('user-feed-reports', [AnalyticController::class, 'getfeedReports']);
+    Route::get('user-reports', [AnalyticController::class, 'getUserReports']);
+});
 
-    Route::get('moderator-get-users', [AnalyticController::class, 'getBarangayUsers']);
-    Route::post('count-report-types', [AnalyticController::class, 'countEmergencyTypes']);
-    Route::post('count-weekly-report', [AnalyticController::class, 'moderatorweeklyReport']);
-    Route::post('count-day-report', [AnalyticController::class, 'countReportsForDate']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('moderator-get-users', [AnalyticController::class, 'moderatorUsers']);
+    Route::post('moderator-report-types', [AnalyticController::class, 'moderatorReportTypes']);
+    Route::post('moderator-yearly-report', [AnalyticController::class, 'moderatorYearlyReport']);
+    Route::post('moderator-monthly-report', [AnalyticController::class, 'moderatorMonthlyReport']);
+    Route::get('moderator-weekly-report', [AnalyticController::class, 'moderatorweeklyReport']);
 });
 
 // General Controller
