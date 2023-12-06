@@ -13,14 +13,12 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\ReportResource;
 use App\Http\Resources\BarangayResource;
 
-class AnalyticController extends Controller
-{
+class AnalyticController extends Controller {
 
     // users analytics
-    public function getUserReports()
-    {
+    public function getUserReports() {
         // Check if the user is authenticated
-        if (Auth::check()) {
+        if(Auth::check()) {
             $user = Auth::user();
             $reports = Report::where('user_id', $user->id)->get();
 
@@ -34,12 +32,11 @@ class AnalyticController extends Controller
         }
     }
 
-    public function getAllBarangay()
-    {
+    public function getAllBarangay() {
         // Check if the user is valid using the Bearer token
         $user = Auth::user();
 
-        if (!$user) {
+        if(!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -55,25 +52,24 @@ class AnalyticController extends Controller
     }
 
 
-    function getfeedReports(Request $request)
-    {
+    function getfeedReports(Request $request) {
         // Check if the user is valid using the Bearer token
         $user = Auth::user();
 
-        if (!$user) {
+        if(!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $barangayName = $request->input('barangayName', 'all');
 
-        if (strtolower($barangayName) === 'all') {
+        if(strtolower($barangayName) === 'all') {
             $reports = Report::where('status', 'Resolved')
                 ->where('visibility', 'Public')
                 ->orderBy('created_at', 'desc')->paginate(10);
         } else {
             $barangay = Barangay::where('name', $barangayName)->first();
 
-            if (!$barangay) {
+            if(!$barangay) {
                 return response()->json(['error' => 'Barangay not found'], 404);
             }
             $reports = Report::where('barangay_id', $barangay->id)
@@ -96,12 +92,30 @@ class AnalyticController extends Controller
         ], 200);
     }
 
-    public function moderatorUsers()
-    {
+    // moderator
+    public function moderatorBrgyInfo() {
+        // Step 1: Check if the user is a moderator
+        $user = Auth::user();
+        if(!$user->isModerator()) {
+            // Return an error response since the user is not a moderator
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Step 2: Get the assigned barangay of the moderator
+        $barangay = $user->barangays;
+
+        // Step 3: Format the barangay information using BarangayResource
+        $formattedBarangay = new BarangayResource($barangay);
+
+        // Step 4: Return the formatted barangay information
+        return response()->json($formattedBarangay, 200);
+    }
+
+    public function moderatorUsers() {
         // Step 1: Get the authenticated user's role and assigned barangay
         $user = Auth::user();
 
-        if ($user->isModerator()) {
+        if($user->isModerator()) {
             $barangayId = $user->barangays->id;
         } else {
             // Return an error response since the user is not a moderator
@@ -128,10 +142,9 @@ class AnalyticController extends Controller
         ], 200);
     }
 
-    public function moderatorReportTypes(Request $request)
-    {
+    public function moderatorReportTypes(Request $request) {
         $user = Auth::user();
-        if (!$user->isModerator()) {
+        if(!$user->isModerator()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -146,11 +159,10 @@ class AnalyticController extends Controller
     }
 
     // moderator
-    public function moderatorYearlyReport(Request $request)
-    {
+    public function moderatorYearlyReport(Request $request) {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if (!$user->isModerator()) {
+        if(!$user->isModerator()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -186,7 +198,7 @@ class AnalyticController extends Controller
             ->get();
 
         // Step 6: Populate the result array based on the reports
-        foreach ($reports as $report) {
+        foreach($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
             $monthName = $createdAt->format('F');
 
@@ -199,11 +211,10 @@ class AnalyticController extends Controller
             'data' => $result,
         ], 200);
     }
-    public function moderatorMonthlyReport(Request $request)
-    {
+    public function moderatorMonthlyReport(Request $request) {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if (!$user->isModerator()) {
+        if(!$user->isModerator()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -234,7 +245,7 @@ class AnalyticController extends Controller
             ->get();
 
         // Step 8: Populate the result array based on the reports
-        foreach ($reports as $report) {
+        foreach($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
             $dayOfMonth = $createdAt->day;
 
@@ -247,11 +258,10 @@ class AnalyticController extends Controller
             'data' => $result,
         ], 200);
     }
-    public function moderatorweeklyReport()
-    {
+    public function moderatorweeklyReport() {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if (!$user->isModerator()) {
+        if(!$user->isModerator()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -273,19 +283,19 @@ class AnalyticController extends Controller
         $lastWeekEnd = $thisWeekEnd->subWeek()->endOfWeek();
 
         // Step 6: Iterate through reports and count for this week and last week
-        foreach ($reports as $report) {
+        foreach($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
 
-            if ($createdAt->between($thisWeekStart, $thisWeekEnd)) {
+            if($createdAt->between($thisWeekStart, $thisWeekEnd)) {
                 $thisWeekCount[$createdAt->dayName] = ($thisWeekCount[$createdAt->dayName] ?? 0) + 1;
-            } elseif ($createdAt->between($lastWeekStart, $lastWeekEnd)) {
+            } elseif($createdAt->between($lastWeekStart, $lastWeekEnd)) {
                 $lastWeekCount[$createdAt->dayName] = ($lastWeekCount[$createdAt->dayName] ?? 0) + 1;
             }
         }
 
         // Step 7: Fill in missing days with 0 count
         $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        foreach ($daysOfWeek as $day) {
+        foreach($daysOfWeek as $day) {
             $thisWeekCount[$day] = $thisWeekCount[$day] ?? 0;
             $lastWeekCount[$day] = $lastWeekCount[$day] ?? 0;
         }
@@ -300,11 +310,10 @@ class AnalyticController extends Controller
     }
 
     // admin
-    public function adminWeeklyReport(Request $request)
-    {
+    public function adminWeeklyReport(Request $request) {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if (!$user->isAdmin()) {
+        if(!$user->isAdmin()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -323,7 +332,7 @@ class AnalyticController extends Controller
         $reportCounts = [];
         $currentDate = $startDate->copy();
 
-        while ($currentDate <= $endDate) {
+        while($currentDate <= $endDate) {
             $dayOfWeek = $currentDate->dayName;
             $reportCount = Report::whereDate('created_at', '>=', $currentDate->startOfDay())
                 ->whereDate('created_at', '<=', $currentDate->endOfDay())
