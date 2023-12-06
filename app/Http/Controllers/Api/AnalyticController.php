@@ -142,18 +142,22 @@ class AnalyticController extends Controller {
         ], 200);
     }
 
-    public function moderatorReportTypes(Request $request) {
+    public function moderatorReportTypes() {
         $user = Auth::user();
         if(!$user->isModerator()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $barangayName = $request->input('barangay_name');
-        $reports = Report::whereHas('barangays', function ($query) use ($barangayName) {
-            $query->where('name', $barangayName);
+        $barangay = $user->barangays->name;
+        $reports = Report::whereHas('barangays', function ($query) use ($barangay) {
+            $query->where('name', $barangay);
         })->get();
 
-        $emergencyTypeCounts = $reports->groupBy('emergency_type')->map->count();
+        $emergencyTypes = ['General', 'Medical', 'Fire', 'Crime']; // List of all emergency types
+
+        $emergencyTypeCounts = collect($emergencyTypes)->mapWithKeys(function ($type) use ($reports) {
+            return [$type => $reports->where('emergency_type', $type)->count()];
+        });
 
         return response()->json(['data' => $emergencyTypeCounts], 200);
     }
@@ -211,6 +215,7 @@ class AnalyticController extends Controller {
             'data' => $result,
         ], 200);
     }
+
     public function moderatorMonthlyReport(Request $request) {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
@@ -222,29 +227,35 @@ class AnalyticController extends Controller {
         // Step 2: Get the assigned barangay ID
         $barangayId = $user->barangays->id;
 
-        // Step 3: Get the inputted month (e.g., 'January')
+        // Step 3: Get the inputted month (e.g., 'November')
         $inputMonth = $request->input('month');
 
         // Step 4: Get the current year
         $currentYear = Carbon::now()->year;
 
-        // Step 5: Get all days of the month
+        // Step 5: Get the number of days in the specified month
         $daysInMonth = Carbon::parse("{$currentYear}-{$inputMonth}")->daysInMonth;
 
-        // Step 6: Initialize the result array with all days set to 0
+        // Step 6: If the month is the current month, limit the range to the current day
+        if($inputMonth == strtolower(Carbon::now()->format('F'))) {
+            $currentDay = Carbon::now()->day;
+            $daysInMonth = min($currentDay, $daysInMonth);
+        }
+
+        // Step 7: Initialize the result array with all dates set to 0
         $result = [
             'month' => $inputMonth,
             'year' => $currentYear,
             'dates' => array_fill(1, $daysInMonth, 0),
         ];
 
-        // Step 7: Get all reports assigned to the barangay for the specified month and year
+        // Step 8: Get all reports assigned to the barangay for the specified month and year
         $reports = Report::where('barangay_id', $barangayId)
             ->whereYear('created_at', $currentYear)
             ->whereMonth('created_at', Carbon::parse($inputMonth)->month)
             ->get();
 
-        // Step 8: Populate the result array based on the reports
+        // Step 9: Populate the result array based on the reports
         foreach($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
             $dayOfMonth = $createdAt->day;
@@ -253,12 +264,13 @@ class AnalyticController extends Controller {
             $result['dates'][$dayOfMonth] += 1;
         }
 
-        // Step 9: Return the result
+        // Step 10: Return the result
         return response()->json([
             'data' => $result,
         ], 200);
     }
-    public function moderatorweeklyReport() {
+
+    public function moderatorWeeklyReport() {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
         if(!$user->isModerator()) {
@@ -276,38 +288,41 @@ class AnalyticController extends Controller {
         $thisWeekCount = $lastWeekCount = [];
 
         // Step 5: Calculate the start and end dates for this week and last week
-        $thisWeekStart = Carbon::now()->startOfWeek();
-        $thisWeekEnd = Carbon::now()->endOfWeek();
+        $thisWeekStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
+        $thisWeekEnd = Carbon::now()->endOfWeek(Carbon::SATURDAY);
 
-        $lastWeekStart = $thisWeekStart->subWeek()->startOfWeek();
-        $lastWeekEnd = $thisWeekEnd->subWeek()->endOfWeek();
+        // To calculate last week's start and end, clone the current week's start and end
+        $lastWeekStart = $thisWeekStart->copy()->subWeek();
+        $lastWeekEnd = $thisWeekEnd->copy()->subWeek();
 
         // Step 6: Iterate through reports and count for this week and last week
         foreach($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
+            $dayName = $createdAt->dayName;
 
             if($createdAt->between($thisWeekStart, $thisWeekEnd)) {
-                $thisWeekCount[$createdAt->dayName] = ($thisWeekCount[$createdAt->dayName] ?? 0) + 1;
+                $thisWeekCount[$dayName] = ($thisWeekCount[$dayName] ?? 0) + 1;
             } elseif($createdAt->between($lastWeekStart, $lastWeekEnd)) {
-                $lastWeekCount[$createdAt->dayName] = ($lastWeekCount[$createdAt->dayName] ?? 0) + 1;
+                $lastWeekCount[$dayName] = ($lastWeekCount[$dayName] ?? 0) + 1;
             }
         }
 
         // Step 7: Fill in missing days with 0 count
-        $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-        foreach($daysOfWeek as $day) {
-            $thisWeekCount[$day] = $thisWeekCount[$day] ?? 0;
-            $lastWeekCount[$day] = $lastWeekCount[$day] ?? 0;
-        }
+        $daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        $thisWeekCount = array_merge(array_fill_keys($daysOfWeek, 0), $thisWeekCount);
+        $lastWeekCount = array_merge(array_fill_keys($daysOfWeek, 0), $lastWeekCount);
 
         // Step 8: Return the result
         return response()->json([
             'data' => [
+                'thisDate' => $thisWeekStart->format('M,d').'-'.$thisWeekEnd->format('M,d'),
+                'lastDate' => $lastWeekStart->format('M,d').'-'.$lastWeekEnd->format('M,d'),
                 'thisweek' => $thisWeekCount,
                 'lastweek' => $lastWeekCount,
             ],
         ], 200);
     }
+
 
     // admin
     public function adminWeeklyReport(Request $request) {

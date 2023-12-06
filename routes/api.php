@@ -46,7 +46,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('moderator-brgy-info', [AnalyticController::class, 'moderatorBrgyInfo']);
     Route::get('moderator-get-users', [AnalyticController::class, 'moderatorUsers']);
-    Route::post('moderator-report-types', [AnalyticController::class, 'moderatorReportTypes']);
+    Route::get('moderator-report-types', [AnalyticController::class, 'moderatorReportTypes']);
     Route::post('moderator-yearly-report', [AnalyticController::class, 'moderatorYearlyReport']);
     Route::post('moderator-monthly-report', [AnalyticController::class, 'moderatorMonthlyReport']);
     Route::get('moderator-weekly-report', [AnalyticController::class, 'moderatorweeklyReport']);
