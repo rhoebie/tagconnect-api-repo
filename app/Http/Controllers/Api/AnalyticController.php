@@ -108,7 +108,7 @@ class AnalyticController extends Controller {
         $formattedBarangay = new BarangayResource($barangay);
 
         // Step 4: Return the formatted barangay information
-        return response()->json($formattedBarangay, 200);
+        return response()->json(['data' => $formattedBarangay], 200);
     }
 
     public function moderatorUsers() {
