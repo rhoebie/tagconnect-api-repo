@@ -13,12 +13,14 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\ReportResource;
 use App\Http\Resources\BarangayResource;
 
-class AnalyticController extends Controller {
+class AnalyticController extends Controller
+{
 
     // users analytics
-    public function getUserReports() {
+    public function getUserReports()
+    {
         // Check if the user is authenticated
-        if(Auth::check()) {
+        if (Auth::check()) {
             $user = Auth::user();
             $reports = Report::where('user_id', $user->id)->get();
 
@@ -32,11 +34,12 @@ class AnalyticController extends Controller {
         }
     }
 
-    public function getAllBarangay() {
+    public function getAllBarangay()
+    {
         // Check if the user is valid using the Bearer token
         $user = Auth::user();
 
-        if(!$user) {
+        if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -52,24 +55,25 @@ class AnalyticController extends Controller {
     }
 
 
-    function getfeedReports(Request $request) {
+    function getfeedReports(Request $request)
+    {
         // Check if the user is valid using the Bearer token
         $user = Auth::user();
 
-        if(!$user) {
+        if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $barangayName = $request->input('barangayName', 'all');
 
-        if(strtolower($barangayName) === 'all') {
+        if (strtolower($barangayName) === 'all') {
             $reports = Report::where('status', 'Resolved')
                 ->where('visibility', 'Public')
                 ->orderBy('created_at', 'desc')->paginate(10);
         } else {
             $barangay = Barangay::where('name', $barangayName)->first();
 
-            if(!$barangay) {
+            if (!$barangay) {
                 return response()->json(['error' => 'Barangay not found'], 404);
             }
             $reports = Report::where('barangay_id', $barangay->id)
@@ -93,10 +97,11 @@ class AnalyticController extends Controller {
     }
 
     // moderator
-    public function moderatorBrgyInfo() {
+    public function moderatorBrgyInfo()
+    {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if(!$user->isModerator()) {
+        if (!$user->isModerator()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -111,11 +116,44 @@ class AnalyticController extends Controller {
         return response()->json(['data' => $formattedBarangay], 200);
     }
 
-    public function moderatorUsers() {
+    // public function moderatorUsers()
+    // {
+    //     // Step 1: Get the authenticated user's role and assigned barangay
+    //     $user = Auth::user();
+
+    //     if ($user->isModerator()) {
+    //         $barangayId = $user->barangays->id;
+    //     } else {
+    //         // Return an error response since the user is not a moderator
+    //         return response()->json(['error' => 'Unauthorized'], 403);
+    //     }
+
+    //     // Step 2: Get all reports assigned to the barangay
+    //     $reports = Report::where('barangay_id', $barangayId)->get();
+
+    //     // Step 3: Get user information based on the user_id in each report
+    //     $userIds = $reports->pluck('user_id')->unique();
+    //     $users = User::whereIn('id', $userIds)->paginate(10);
+
+    //     $userDetails = UserResource::collection($users);
+
+    //     $meta = [
+    //         'current_page' => $users->currentPage(),
+    //         'total_pages' => $users->lastPage(),
+    //     ];
+
+    //     return response()->json([
+    //         'data' => $userDetails,
+    //         'meta' => $meta,
+    //     ], 200);
+    // }
+
+    public function moderatorUsers()
+    {
         // Step 1: Get the authenticated user's role and assigned barangay
         $user = Auth::user();
 
-        if($user->isModerator()) {
+        if ($user->isModerator()) {
             $barangayId = $user->barangays->id;
         } else {
             // Return an error response since the user is not a moderator
@@ -127,24 +165,39 @@ class AnalyticController extends Controller {
 
         // Step 3: Get user information based on the user_id in each report
         $userIds = $reports->pluck('user_id')->unique();
-        $users = User::whereIn('id', $userIds)->paginate(10);
+        $users = User::whereIn('id', $userIds)->get(); // Remove pagination
 
         $userDetails = UserResource::collection($users);
 
-        $meta = [
-            'current_page' => $users->currentPage(),
-            'total_pages' => $users->lastPage(),
-        ];
-
         return response()->json([
             'data' => $userDetails,
-            'meta' => $meta,
         ], 200);
     }
 
-    public function moderatorReportTypes() {
+
+    function moderatorAllReports()
+    {
+        // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if(!$user->isModerator()) {
+
+        if ($user->isModerator()) {
+            $barangayId = $user->barangays->id;
+        } else {
+            // Return an error response since the user is not a moderator
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Step 3: Get all reports assigned to the barangay
+        $reports = Report::where('barangay_id', $barangayId)->get();
+
+        // Step 4: Return the reports
+        return response()->json(['data' => $reports], 200);
+    }
+
+    public function moderatorReportTypes()
+    {
+        $user = Auth::user();
+        if (!$user->isModerator()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -163,10 +216,11 @@ class AnalyticController extends Controller {
     }
 
     // moderator
-    public function moderatorYearlyReport(Request $request) {
+    public function moderatorYearlyReport(Request $request)
+    {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if(!$user->isModerator()) {
+        if (!$user->isModerator()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -202,7 +256,7 @@ class AnalyticController extends Controller {
             ->get();
 
         // Step 6: Populate the result array based on the reports
-        foreach($reports as $report) {
+        foreach ($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
             $monthName = $createdAt->format('F');
 
@@ -216,10 +270,11 @@ class AnalyticController extends Controller {
         ], 200);
     }
 
-    public function moderatorMonthlyReport(Request $request) {
+    public function moderatorMonthlyReport(Request $request)
+    {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if(!$user->isModerator()) {
+        if (!$user->isModerator()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -237,7 +292,7 @@ class AnalyticController extends Controller {
         $daysInMonth = Carbon::parse("{$currentYear}-{$inputMonth}")->daysInMonth;
 
         // Step 6: If the month is the current month, limit the range to the current day
-        if($inputMonth == strtolower(Carbon::now()->format('F'))) {
+        if ($inputMonth == strtolower(Carbon::now()->format('F'))) {
             $currentDay = Carbon::now()->day;
             $daysInMonth = min($currentDay, $daysInMonth);
         }
@@ -256,7 +311,7 @@ class AnalyticController extends Controller {
             ->get();
 
         // Step 9: Populate the result array based on the reports
-        foreach($reports as $report) {
+        foreach ($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
             $dayOfMonth = $createdAt->day;
 
@@ -270,10 +325,11 @@ class AnalyticController extends Controller {
         ], 200);
     }
 
-    public function moderatorWeeklyReport() {
+    public function moderatorWeeklyReport()
+    {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if(!$user->isModerator()) {
+        if (!$user->isModerator()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -296,13 +352,13 @@ class AnalyticController extends Controller {
         $lastWeekEnd = $thisWeekEnd->copy()->subWeek();
 
         // Step 6: Iterate through reports and count for this week and last week
-        foreach($reports as $report) {
+        foreach ($reports as $report) {
             $createdAt = Carbon::parse($report->created_at);
             $dayName = $createdAt->dayName;
 
-            if($createdAt->between($thisWeekStart, $thisWeekEnd)) {
+            if ($createdAt->between($thisWeekStart, $thisWeekEnd)) {
                 $thisWeekCount[$dayName] = ($thisWeekCount[$dayName] ?? 0) + 1;
-            } elseif($createdAt->between($lastWeekStart, $lastWeekEnd)) {
+            } elseif ($createdAt->between($lastWeekStart, $lastWeekEnd)) {
                 $lastWeekCount[$dayName] = ($lastWeekCount[$dayName] ?? 0) + 1;
             }
         }
@@ -315,8 +371,8 @@ class AnalyticController extends Controller {
         // Step 8: Return the result
         return response()->json([
             'data' => [
-                'thisDate' => $thisWeekStart->format('M,d').'-'.$thisWeekEnd->format('M,d'),
-                'lastDate' => $lastWeekStart->format('M,d').'-'.$lastWeekEnd->format('M,d'),
+                'thisDate' => $thisWeekStart->format('M,d') . '-' . $thisWeekEnd->format('M,d'),
+                'lastDate' => $lastWeekStart->format('M,d') . '-' . $lastWeekEnd->format('M,d'),
                 'thisweek' => $thisWeekCount,
                 'lastweek' => $lastWeekCount,
             ],
@@ -325,10 +381,11 @@ class AnalyticController extends Controller {
 
 
     // admin
-    public function adminWeeklyReport(Request $request) {
+    public function adminWeeklyReport(Request $request)
+    {
         // Step 1: Check if the user is a moderator
         $user = Auth::user();
-        if(!$user->isAdmin()) {
+        if (!$user->isAdmin()) {
             // Return an error response since the user is not a moderator
             return response()->json(['error' => 'Unauthorized'], 403);
         }
@@ -347,7 +404,7 @@ class AnalyticController extends Controller {
         $reportCounts = [];
         $currentDate = $startDate->copy();
 
-        while($currentDate <= $endDate) {
+        while ($currentDate <= $endDate) {
             $dayOfWeek = $currentDate->dayName;
             $reportCount = Report::whereDate('created_at', '>=', $currentDate->startOfDay())
                 ->whereDate('created_at', '<=', $currentDate->endOfDay())
