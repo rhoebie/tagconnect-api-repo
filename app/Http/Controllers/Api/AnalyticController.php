@@ -190,8 +190,10 @@ class AnalyticController extends Controller
         // Step 3: Get all reports assigned to the barangay
         $reports = Report::where('barangay_id', $barangayId)->get();
 
+        $reportDetails = ReportResource::collection($reports);
+
         // Step 4: Return the reports
-        return response()->json(['data' => $reports], 200);
+        return response()->json(['data' => $reportDetails], 200);
     }
 
     public function moderatorReportTypes()
