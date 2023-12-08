@@ -264,15 +264,7 @@ class AuthController extends Controller
             // Other exceptions (e.g., database errors)
             return response()->json(['error' => 'Password change failed. Please try again later.'], 500);
         }
-
-        // {
-        //     "id": "2",
-        //     "old_password": "",
-        //     "new_password": "",
-        //     "new_password_confirmation": ""
-        // }
     }
-
 
     public function login(Request $request)
     {
@@ -281,14 +273,15 @@ class AuthController extends Controller
                 $request->all(),
                 [
                     'email' => 'required|email',
-                    'password' => 'required'
+                    'password' => 'required',
+                    'fcmToken' => 'required|string' // Add validation for fcmToken
                 ]
             );
 
             if ($validateUser->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'validation error',
+                    'message' => 'Validation error',
                     'errors' => $validateUser->errors()
                 ], 401);
             }
@@ -296,11 +289,14 @@ class AuthController extends Controller
             if (!Auth::attempt($request->only(['email', 'password']))) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Email & Password does not match with our record.',
+                    'message' => 'Email & Password do not match with our records.',
                 ], 401);
             }
 
             $user = User::where('email', $request->email)->first();
+
+            // Update fCMToken column in the user table
+            $user->update(['fCMToken' => $request->fcmToken]);
 
             return response()->json([
                 'status' => true,
