@@ -264,15 +264,9 @@ class AuthController extends Controller
             // Other exceptions (e.g., database errors)
             return response()->json(['error' => 'Password change failed. Please try again later.'], 500);
         }
-
-        // {
-        //     "id": "2",
-        //     "old_password": "",
-        //     "new_password": "",
-        //     "new_password_confirmation": ""
-        // }
     }
-    
+
+
     public function login(Request $request)
     {
         try {
