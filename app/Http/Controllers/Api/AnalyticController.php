@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\ReportResource;
 use App\Http\Resources\BarangayResource;
 
-
 class AnalyticController extends Controller
 {
 
@@ -380,50 +379,11 @@ class AnalyticController extends Controller
         ], 200);
     }
 
-    // tagconnect-ff743-e4b4340f03bb.json
-
-    // public function sendNotification($userToken, $title, $body)
-    // {
-    //     $url = 'https://fcm.googleapis.com/v1/projects/tagconnect-ff743/messages:send';
-
-    //     // Load the Firebase service account JSON file
-    //     $credentials = json_decode(file_get_contents('/config/firebase/tagconnect-ff743-e4b4340f03bb.json'), true);
-
-    //     // Create the request payload
-    //     $payload = [
-    //         'message' => [
-    //             'token' => $userToken,
-    //             'notification' => [
-    //                 'title' => $title,
-    //                 'body' => $body,
-    //             ],
-    //         ],
-    //     ];
-
-    //     // Send the POST request to Firebase Cloud Messaging API
-    //     $response = Http::withHeaders([
-    //         'Authorization' => 'Bearer ' . $credentials['access_token'],
-    //         'Content-Type' => 'application/json',
-    //     ])->post($url, $payload);
-
-    //     // Check the response status and return the result
-    //     if ($response->successful()) {
-    //         return 'Notification sent successfully';
-    //     } else {
-    //         return 'Failed to send notification: ' . $response->body();
-    //     }
-    // }
-
-    function sendNotification(Request $request)
+    function sendNotification($userToken, $title, $body)
     {
         $url = 'https://fcm.googleapis.com/v1/projects/tagconnect-ff743/messages:send';
         // Load the Firebase service account JSON file
         $credentials = json_decode(file_get_contents(storage_path('app/firebase/tagconnect-ff743-e4b4340f03bb.json')), true);
-
-        // Get the request data
-        $userToken = $request->input('userToken');
-        $title = $request->input('title');
-        $body = $request->input('body');
 
         // Create the request payload
         $payload = [

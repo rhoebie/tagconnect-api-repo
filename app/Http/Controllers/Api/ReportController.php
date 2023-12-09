@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
 use App\Models\Report;
 use App\Models\Barangay;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use App\Http\Resources\ReportResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreReportRequest;
 use App\Http\Requests\UpdateReportRequest;
+use App\Http\Controllers\Api\AnalyticController;
 
 class ReportController extends Controller
 {
@@ -77,6 +79,25 @@ class ReportController extends Controller
         ]);
 
         $report->save();
+
+        // Get the moderator ID of the barangay
+        $moderatorId = $barangay->moderator_id;
+
+        // Get the user corresponding to the moderator ID
+        $moderator = User::find($moderatorId);
+
+        if (!$moderator) {
+            return response()->json([
+                'message' => 'Moderator not found',
+            ], 404);
+        }
+
+        // Notify the barangay
+        $analyticController = new AnalyticController;
+        $fcmToken = $moderator->fCMToken;
+        $title = 'New Report';
+        $body = 'There is a new reported emergency.';
+        $analyticController->sendNotification($fcmToken, $title, $body);
 
         return response()->json([
             'message' => 'Success',
