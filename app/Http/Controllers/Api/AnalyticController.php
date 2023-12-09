@@ -124,6 +124,51 @@ class AnalyticController extends Controller
         ], 200);
     }
 
+    // moderator
+    public function moderatorBrgyInfo()
+    {
+        // Step 1: Check if the user is a moderator
+        $user = Auth::user();
+        if (!$user->isModerator()) {
+            // Return an error response since the user is not a moderator
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Step 2: Get the assigned barangay of the moderator
+        $barangay = $user->barangays;
+
+        // Step 3: Format the barangay information using BarangayResource
+        $formattedBarangay = new BarangayResource($barangay);
+
+        // Step 4: Return the formatted barangay information
+        return response()->json(['data' => $formattedBarangay], 200);
+    }
+
+    public function moderatorUsers()
+    {
+        // Step 1: Get the authenticated user's role and assigned barangay
+        $user = Auth::user();
+
+        if ($user->isModerator()) {
+            $barangayId = $user->barangays->id;
+        } else {
+            // Return an error response since the user is not a moderator
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Step 2: Get all reports assigned to the barangay
+        $reports = Report::where('barangay_id', $barangayId)->get();
+
+        // Step 3: Get user information based on the user_id in each report
+        $userIds = $reports->pluck('user_id')->unique();
+        $users = User::whereIn('id', $userIds)->get();
+
+        $userDetails = UserResource::collection($users);
+
+        return response()->json([
+            'data' => $userDetails,
+        ], 200);
+    }
 
     function moderatorAllReports()
     {
