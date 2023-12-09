@@ -18,13 +18,18 @@ class BarangayController extends Controller
     /**
      * Display a listing of the resource.
      */
+
     public function index(Request $request)
     {
         $this->authorize('view-any', Barangay::class);
-        $barangay = Barangay::all();
+        $barangay = Barangay::paginate(10);
+        $meta = [
+            'current_page' => $barangay->currentPage(),
+            'total_pages' => $barangay->lastPage(),
+        ];
         return response()->json([
-            'message' => 'Success',
             'data' => new BarangayCollection($barangay),
+            'meta' => $meta,
         ], 200);
     }
 
@@ -73,7 +78,6 @@ class BarangayController extends Controller
         }
 
         return response()->json([
-            'message' => 'Success',
             'data' => new BarangayResource($barangay),
         ], 200);
     }

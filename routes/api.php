@@ -28,24 +28,29 @@ use App\Http\Controllers\Api\BarangayController;
 // routes/api.php or routes/web.php (depending on your needs)
 
 // Authentication Controller
-Route::post('register-user', [AuthController::class, 'registerUser']);
-Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
-Route::post('login-user', [AuthController::class, 'login']);
-Route::post('logout-user', [AuthController::class, 'logout']);
-Route::post('request-otp', [AuthController::class, 'requestOtp']);
-Route::post('reset-password', [AuthController::class, 'resetPassword']);
-Route::patch('change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
+Route::post('auth-register-user', [AuthController::class, 'registerUser']);
+Route::post('auth-verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('auth-login-user', [AuthController::class, 'login']);
+Route::post('auth-logout-user', [AuthController::class, 'logout']);
+Route::post('auth-request-otp', [AuthController::class, 'requestOtp']);
+Route::post('auth-reset-password', [AuthController::class, 'resetPassword']);
+Route::patch('auth-change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('get-news', [NewsController::class, 'getNews']);
-    Route::get('get-barangay', [AnalyticController::class, 'getAllBarangay']);
-    Route::post('get-feed-reports', [AnalyticController::class, 'getfeedReports']);
-    Route::get('get-user-reports', [AnalyticController::class, 'getUserReports']);
+    Route::get('user-news', [NewsController::class, 'getNews']);
+    Route::get('user-barangay', [AnalyticController::class, 'getAllBarangay']);
+    Route::post('user-feed-reports', [AnalyticController::class, 'getfeedReports']);
+    Route::get('user-reports', [AnalyticController::class, 'getUserReports']);
+});
 
-    Route::get('moderator-get-users', [AnalyticController::class, 'getBarangayUsers']);
-    Route::post('count-report-types', [AnalyticController::class, 'countEmergencyTypes']);
-    Route::post('count-weekly-report', [AnalyticController::class, 'weeklyReport']);
-    Route::post('count-day-report', [AnalyticController::class, 'countReportsForDate']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('moderator-brgy-info', [AnalyticController::class, 'moderatorBrgyInfo']);
+    Route::get('moderator-get-users', [AnalyticController::class, 'moderatorUsers']);
+    Route::get('moderator-get-reports', [AnalyticController::class, 'moderatorAllReports']);
+    Route::get('moderator-report-types', [AnalyticController::class, 'moderatorReportTypes']);
+    Route::post('moderator-yearly-report', [AnalyticController::class, 'moderatorYearlyReport']);
+    Route::post('moderator-monthly-report', [AnalyticController::class, 'moderatorMonthlyReport']);
+    Route::get('moderator-weekly-report', [AnalyticController::class, 'moderatorweeklyReport']);
 });
 
 // General Controller

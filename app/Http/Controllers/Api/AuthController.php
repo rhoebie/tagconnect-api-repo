@@ -83,8 +83,6 @@ class AuthController extends Controller
         }
     }
 
-
-
     public function registerModerator(Request $request)
     {
         try {
@@ -274,8 +272,7 @@ class AuthController extends Controller
         //     "new_password_confirmation": ""
         // }
     }
-
-
+    
     public function login(Request $request)
     {
         try {
@@ -283,14 +280,15 @@ class AuthController extends Controller
                 $request->all(),
                 [
                     'email' => 'required|email',
-                    'password' => 'required'
+                    'password' => 'required',
+                    'fcmToken' => 'required|string' // Add validation for fcmToken
                 ]
             );
 
             if ($validateUser->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'validation error',
+                    'message' => 'Validation error',
                     'errors' => $validateUser->errors()
                 ], 401);
             }
@@ -298,16 +296,20 @@ class AuthController extends Controller
             if (!Auth::attempt($request->only(['email', 'password']))) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Email & Password does not match with our record.',
+                    'message' => 'Email & Password do not match with our records.',
                 ], 401);
             }
 
             $user = User::where('email', $request->email)->first();
 
+            // Update fCMToken column in the user table
+            $user->update(['fCMToken' => $request->fcmToken]);
+
             return response()->json([
                 'status' => true,
                 'message' => 'User Logged In Successfully',
                 'user_id' => $user->id,
+                'role' => $user->roles->name,
                 'token' => $user->createToken("API TOKEN")->plainTextToken
             ], 200);
 
