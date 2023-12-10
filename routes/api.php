@@ -46,6 +46,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('moderator-update-resolved', [ModeratorController::class, 'moderatorResolved']);
+    Route::post('moderator-update-process', [ModeratorController::class, 'moderatorProcess']);
     Route::get('moderator-brgy-info', [ModeratorController::class, 'moderatorBrgyInfo']);
     Route::get('moderator-get-users', [ModeratorController::class, 'moderatorUsers']);
     Route::get('moderator-get-reports', [ModeratorController::class, 'moderatorAllReports']);

@@ -14,6 +14,65 @@ use App\Http\Resources\BarangayResource;
 
 class ModeratorController extends Controller
 {
+    public function moderatorResolved(Request $request)
+    {
+        $reportId = $request->input('reportId');
+        // Step 1: Check if the user is a Moderator
+        $user = Auth::user();
+        if (!$user->isModerator()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Step 2: Get the report details
+        $report = Report::find($reportId);
+        if (!$report) {
+            return response()->json(['message' => 'Report not found'], 404);
+        }
+
+        // Step 3: Update the report status
+        $report->status = 'Resolved';
+        $report->save();
+
+        // Step 4: Get the fCMToken of the user
+        $reporter = User::find($report->user_id);
+        $fCMToken = $reporter->fCMToken;
+        $title = 'Report Resolved';
+        $body = 'The issue you reported has been resolved. If you have any further concerns, please don\'t hesitate to reach out to us.';
+        $notificationFCM = new NotificationController;
+        $notificationFCM->sendNotif($fCMToken, $title, $body);
+
+        return response()->json(['message' => 'Report status updated to Resolved'], 200);
+    }
+    public function moderatorProcess(Request $request)
+    {
+        $reportId = $request->input('reportId');
+        // Step 1: Check if the user is a Moderator
+        $user = Auth::user();
+        if (!$user->isModerator()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Step 2: Get the report details
+        $report = Report::find($reportId);
+        if (!$report) {
+            return response()->json(['message' => 'Report not found'], 404);
+        }
+
+        // Step 3: Update the report status
+        $report->status = 'Processing';
+        $report->save();
+
+        // Step 4: Get the fCMToken of the user
+        $reporter = User::find($report->user_id);
+        $fCMToken = $reporter->fCMToken;
+        $title = 'Report Processing Update';
+        $body = 'Your report is currently being processed. We are working on it and will provide updates soon. Thank you for your patience.';
+        $notificationFCM = new NotificationController;
+        $notificationFCM->sendNotif($fCMToken, $title, $body);
+
+        return response()->json(['message' => 'Report status updated to Processing'], 200);
+    }
+
     public function moderatorBrgyInfo()
     {
         // Step 1: Check if the user is a moderator
