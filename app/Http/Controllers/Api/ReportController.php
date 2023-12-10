@@ -31,8 +31,6 @@ class ReportController extends Controller
 
     public function store(StoreReportRequest $request)
     {
-        // init
-        $notifController = new NotificationController;
 
         // authorize
         $this->authorize('create', Report::class);
@@ -53,6 +51,9 @@ class ReportController extends Controller
                 ], 500);
             }
         }
+
+        // init
+        $notifController = new NotificationController;
 
         // Get the user ID from the authenticated user
         $user_id = Auth::id();

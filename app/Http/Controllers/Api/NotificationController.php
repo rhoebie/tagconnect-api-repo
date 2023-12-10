@@ -13,6 +13,7 @@ class NotificationController extends Controller
     function sendNotification($userToken, $title, $body)
     {
         $url = 'https://fcm.googleapis.com/v1/projects/tagconnect-ff743/messages:send';
+
         // Load the Firebase service account JSON file
         $credentials = json_decode(file_get_contents(storage_path('app/firebase/tagconnect-ff743-e4b4340f03bb.json')), true);
 
