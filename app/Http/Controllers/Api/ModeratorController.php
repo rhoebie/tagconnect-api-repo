@@ -31,17 +31,32 @@ class ModeratorController extends Controller
 
         // Step 3: Update the report status
         $report->status = 'Resolved';
+        $report->updated_at = now();
         $report->save();
 
         // Step 4: Get the fCMToken of the user
         $reporter = User::find($report->user_id);
-        $fCMToken = $reporter->fCMToken;
-        $title = 'Report Resolved';
-        $body = 'The issue you reported has been resolved. If you have any further concerns, please don\'t hesitate to reach out to us.';
-        $notificationFCM = new NotificationController;
-        $notificationFCM->sendNotif($fCMToken, $title, $body);
 
-        return response()->json(['message' => 'Report status updated to Resolved'], 200);
+        //
+        $fCMToken = $reporter->fCMToken;
+
+        //
+        $title = 'Report Resolved';
+        $body = 'Hi ' . $reporter->lastname . ' the incident you reported on barangay ' . $report->barangays->name . ' has been resolved.';
+        $data = [
+            'report_id' => (string) $report->id,
+            'notified_at' => $report->updated_at->format('Y-m-d H:i:s'),
+        ];
+
+        //
+        $notificationFCM = new NotificationController;
+        $result = $notificationFCM->sendNotif($fCMToken, $title, $body, $data);
+
+        if ($result['status'] === 'success') {
+            return response()->json(['message' => 'Report status updated to Resolved', 'notification_status' => $result['message']], 200);
+        } else {
+            return response()->json(['message' => 'Report status updated to Resolved', 'notification_status' => $result['message']], 500);
+        }
     }
     public function moderatorProcess(Request $request)
     {
@@ -60,15 +75,24 @@ class ModeratorController extends Controller
 
         // Step 3: Update the report status
         $report->status = 'Processing';
+        $report->updated_at = now();
         $report->save();
 
         // Step 4: Get the fCMToken of the user
         $reporter = User::find($report->user_id);
+
+        //
         $fCMToken = $reporter->fCMToken;
         $title = 'Report Processing Update';
-        $body = 'Your report is currently being processed. We are working on it and will provide updates soon. Thank you for your patience.';
+        $body = 'Hi ' . $reporter->lastname . ' your report is currently being processed. We are working on it and will provide updates soon. Thank you for your patience.';
+        $data = [
+            'report_id' => (string) $report->id,
+            'notified_at' => $report->updated_at->format('Y-m-d H:i:s'),
+        ];
+
+        //
         $notificationFCM = new NotificationController;
-        $notificationFCM->sendNotif($fCMToken, $title, $body);
+        $notificationFCM->sendNotif($fCMToken, $title, $body, $data);
 
         return response()->json(['message' => 'Report status updated to Processing'], 200);
     }

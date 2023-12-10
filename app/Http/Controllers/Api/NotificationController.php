@@ -11,7 +11,7 @@ use GuzzleHttp\Exception\ClientException;
 
 class NotificationController extends Controller
 {
-    function sendNotif($userToken, $title, $body)
+    function sendNotif($userToken, $title, $body, $data)
     {
         try {
             $url = 'https://fcm.googleapis.com/v1/projects/tagconnect-ff743/messages:send';
@@ -26,6 +26,7 @@ class NotificationController extends Controller
                         'title' => $title,
                         'body' => $body,
                     ],
+                    'data' => $data,
                 ],
             ];
 
@@ -78,17 +79,17 @@ class NotificationController extends Controller
 
             // Check the response status and return the result
             if ($response->getStatusCode() === 200) {
-                return response()->json(['message' => 'Notification sent successfully']);
+                return ['status' => 'success', 'message' => 'Notification sent successfully'];
             } else {
-                return response()->json(['error' => 'Failed to send notification: ' . $response->getBody()], 500);
+                return ['status' => 'error', 'message' => 'Failed to send notification: ' . $response->getBody()];
             }
         } catch (ClientException $e) {
             // GuzzleHttp exception handling
             $responseBody = $e->getResponse()->getBody()->getContents();
-            return response()->json(['error' => 'GuzzleHttp Exception: ' . $responseBody], 500);
+            return ['status' => 'error', 'message' => 'GuzzleHttp Exception: ' . $responseBody];
         } catch (Exception $e) {
             // Other exceptions
-            return response()->json(['error' => 'Unexpected Exception: ' . $e->getMessage()], 500);
+            return ['status' => 'error', 'message' => 'Unexpected Exception: ' . $e->getMessage()];
         }
     }
     function sendNotification(Request $request)
