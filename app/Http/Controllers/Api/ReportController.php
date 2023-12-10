@@ -13,7 +13,6 @@ use App\Http\Resources\ReportResource;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreReportRequest;
 use App\Http\Requests\UpdateReportRequest;
-use App\Http\Controllers\Api\AnalyticController;
 
 class ReportController extends Controller
 {
@@ -32,6 +31,10 @@ class ReportController extends Controller
 
     public function store(StoreReportRequest $request)
     {
+        // init
+        $notifController = new NotificationController;
+
+        // authorize
         $this->authorize('create', Report::class);
         $imagePath = null; // Initialize with null
 
@@ -93,11 +96,10 @@ class ReportController extends Controller
         }
 
         // Notify the barangay
-        $analyticController = new AnalyticController;
         $fcmToken = $moderator->fCMToken;
-        $title = 'New Report';
-        $body = 'There is a new reported emergency.';
-        $analyticController->sendNotification($fcmToken, $title, $body);
+        $title = 'New Incident Report: Action Needed';
+        $body = 'A new incident report has been submitted within your designated barangay boundary.';
+        $notifController->sendNotification($fcmToken, $title, $body);
 
         return response()->json([
             'message' => 'Success',

@@ -1,13 +1,15 @@
 <?php
 
-use App\Http\Controllers\Api\NewsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\AnalyticController;
 use App\Http\Controllers\Api\BarangayController;
+use App\Http\Controllers\Api\ModeratorController;
+use App\Http\Controllers\Api\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,20 +40,22 @@ Route::patch('auth-change-password', [AuthController::class, 'changePassword'])-
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('user-news', [NewsController::class, 'getNews']);
-    Route::get('user-barangay', [AnalyticController::class, 'getAllBarangay']);
-    Route::post('user-feed-reports', [AnalyticController::class, 'getfeedReports']);
-    Route::get('user-reports', [AnalyticController::class, 'getUserReports']);
+    Route::get('user-barangay', [UserController::class, 'userGetBarangay']);
+    Route::post('user-feed-reports', [UserController::class, 'userGetFeedReports']);
+    Route::get('user-reports', [UserController::class, 'userGetReports']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('moderator-brgy-info', [AnalyticController::class, 'moderatorBrgyInfo']);
-    Route::get('moderator-get-users', [AnalyticController::class, 'moderatorUsers']);
-    Route::get('moderator-get-reports', [AnalyticController::class, 'moderatorAllReports']);
-    Route::get('moderator-report-types', [AnalyticController::class, 'moderatorReportTypes']);
-    Route::post('moderator-yearly-report', [AnalyticController::class, 'moderatorYearlyReport']);
-    Route::post('moderator-monthly-report', [AnalyticController::class, 'moderatorMonthlyReport']);
-    Route::get('moderator-weekly-report', [AnalyticController::class, 'moderatorweeklyReport']);
+    Route::get('moderator-brgy-info', [ModeratorController::class, 'moderatorBrgyInfo']);
+    Route::get('moderator-get-users', [ModeratorController::class, 'moderatorUsers']);
+    Route::get('moderator-get-reports', [ModeratorController::class, 'moderatorAllReports']);
+    Route::get('moderator-report-types', [ModeratorController::class, 'moderatorReportTypes']);
+    Route::post('moderator-yearly-report', [ModeratorController::class, 'moderatorYearlyReport']);
+    Route::post('moderator-monthly-report', [ModeratorController::class, 'moderatorMonthlyReport']);
+    Route::get('moderator-weekly-report', [ModeratorController::class, 'moderatorweeklyReport']);
 });
+
+Route::post('send-notif', [NotificationController::class, 'sendNotification']);
 
 // General Controller
 Route::name('api')

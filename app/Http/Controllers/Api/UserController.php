@@ -11,6 +11,11 @@ use App\Http\Resources\UserCollection;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Report;
+use App\Models\Barangay;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\ReportResource;
+use App\Http\Resources\BarangayResource;
 
 class UserController extends Controller
 {
@@ -175,15 +180,83 @@ class UserController extends Controller
         return $imageURL;
     }
 
-    // {
-    //     "name": "John",
-    //     "age": 30,
-    //     "birthdate": "1993-05-15",
-    //     "contactnumber": "123-456-7890",
-    //     "address": "123 Main St",
-    //     "email": "johndoe@example.com",
-    //     "password": "your_password_here",
-    //     "password_confirmation": "your_password_here",
-    //     "image": null
-    // }
+    // users analytics
+    public function userGetReports()
+    {
+        // Check if the user is authenticated
+        if (Auth::check()) {
+            $user = Auth::user();
+            $reports = Report::where('user_id', $user->id)->get();
+
+            $reportDetails = ReportResource::collection($reports);
+
+            return response()->json([
+                'data' => $reportDetails,
+            ], 200);
+        } else {
+            return response()->json(['message' => 'Unauthorized.']);
+        }
+    }
+
+    public function userGetBarangay()
+    {
+        // Check if the user is valid using the Bearer token
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // Retrieve all barangays
+        $barangays = Barangay::all();
+
+        // Format the data using BarangayResource
+        $formattedBarangays = BarangayResource::collection($barangays);
+
+        return response()->json([
+            'data' => $formattedBarangays,
+        ], 200);
+    }
+
+
+    function userGetFeedReports(Request $request)
+    {
+        // Check if the user is valid using the Bearer token
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $barangayName = $request->input('barangayName', 'all');
+
+        if (strtolower($barangayName) === 'all') {
+            $reports = Report::where('status', 'Resolved')
+                ->where('visibility', 'Public')
+                ->orderBy('created_at', 'desc')->paginate(10);
+        } else {
+            $barangay = Barangay::where('name', $barangayName)->first();
+
+            if (!$barangay) {
+                return response()->json(['error' => 'Barangay not found'], 404);
+            }
+            $reports = Report::where('barangay_id', $barangay->id)
+                ->where('status', 'Resolved')
+                ->where('visibility', 'Public')
+                ->orderBy('created_at', 'desc')->paginate(10);
+            ;
+        }
+
+        $reportDetails = ReportResource::collection($reports);
+
+        $meta = [
+            'current_page' => $reports->currentPage(),
+            'total_pages' => $reports->lastPage(),
+        ];
+
+        return response()->json([
+            'data' => $reportDetails,
+            'meta' => $meta,
+        ], 200);
+    }
 }
