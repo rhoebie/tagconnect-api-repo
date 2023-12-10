@@ -52,9 +52,6 @@ class ReportController extends Controller
             }
         }
 
-        // init
-        $notifController = new NotificationController;
-
         // Get the user ID from the authenticated user
         $user_id = Auth::id();
 
@@ -90,21 +87,18 @@ class ReportController extends Controller
         // Get the user corresponding to the moderator ID
         $moderator = User::find($moderatorId);
 
+        // Get device token
+        $fcmToken = $moderator->fCMToken;
+
         if (!$moderator) {
             return response()->json([
                 'message' => 'Moderator not found',
             ], 404);
         }
 
-        // Notify the barangay
-        $fcmToken = $moderator->fCMToken;
-        $title = 'New Incident Report: Action Needed';
-        $body = 'A new incident report has been submitted within your designated barangay boundary.';
-        $notifController->sendNotification($fcmToken, $title, $body);
-
         return response()->json([
             'message' => 'Success',
-            'data' => new ReportResource($report),
+            'fcmToken' => $fcmToken,
         ], 201);
     }
 

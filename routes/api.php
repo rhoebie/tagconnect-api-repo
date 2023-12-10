@@ -55,6 +55,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('moderator-weekly-report', [ModeratorController::class, 'moderatorweeklyReport']);
 });
 
+Route::post('send-notif', [NotificationController::class, 'sendNotification']);
+
 // General Controller
 Route::name('api')
     ->middleware('auth:sanctum')
