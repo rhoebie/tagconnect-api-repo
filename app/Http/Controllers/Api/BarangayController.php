@@ -7,11 +7,12 @@ use App\Rules\ValidPolygon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\BarangayResource;
 use App\Http\Resources\BarangayCollection;
 use App\Http\Requests\StoreBarangayRequest;
 use App\Http\Requests\UpdateBarangayRequest;
-use Illuminate\Support\Facades\Storage;
 
 class BarangayController extends Controller
 {
@@ -110,10 +111,12 @@ class BarangayController extends Controller
                 $validated['image'] = $imagePath;
             }
         }
+        // Get the user ID from the authenticated user
+        $user_id = Auth::id();
 
         // Update the Barangay instance with validated data, including the 'boundary' column
         $barangay->update([
-            'moderator_id' => $validated['moderator_id'],
+            'moderator_id' => $user_id,
             'name' => $validated['name'],
             'district' => $validated['district'],
             'contact' => $validated['contact'],
