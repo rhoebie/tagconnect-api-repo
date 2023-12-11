@@ -116,9 +116,7 @@ class ReportController extends Controller
 
         return response()->json([
             'message' => 'Success',
-            'data' => [
-                'report' => new ReportResource($report),
-            ],
+            'data' => new ReportResource($report),
         ], 200);
     }
 
