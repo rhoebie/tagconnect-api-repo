@@ -38,15 +38,15 @@ class UpdateBarangayRequest extends FormRequest
             ];
         } else {
             return [
-                'moderator_id' => ['sometimes', 'exists:users,id'],
+                //'moderator_id' => ['sometimes', 'exists:users,id'],
                 'name' => ['sometimes', 'max:255', 'string'],
                 'district' => ['nullable', 'integer'],
                 'contact' => ['sometimes', 'max:255', 'string'],
                 'address' => ['sometimes', 'max:255', 'string'],
-                'location' => ['sometimes', 'array'],
-                'location.latitude' => ['sometimes', 'numeric'],
-                'location.longitude' => ['sometimes', 'numeric'],
-                'image' => ['nullable', new ValidImage]
+                // 'location' => ['sometimes', 'array'],
+                // 'location.latitude' => ['sometimes', 'numeric'],
+                // 'location.longitude' => ['sometimes', 'numeric'],
+                // 'image' => ['nullable', new ValidImage]
             ];
         }
     }
